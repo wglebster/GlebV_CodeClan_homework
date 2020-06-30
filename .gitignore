@@ -1,2 +1,3 @@
 # Ignore file name "file_to_ignore.txt" 
 file_to_ignore.txt
+.Rproj.user

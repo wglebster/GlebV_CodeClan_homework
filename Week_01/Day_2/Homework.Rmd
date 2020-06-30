@@ -1,0 +1,124 @@
+---
+title: "Gleb's homework 30/06/2020"
+output: html_notebook
+---
+
+<h1>Part 1.</h1>
+
+<h2>Q1.</h2>
+
+Create a vector called stock_prices with the following data points: 23, 27, 23, 21, 34, 24, 25, 30, 37, 30.
+```{r}
+stock_prices <- c(23, 27, 23, 21, 34, 24, 25, 30, 37, 30)
+```
+Create a vector called day_of_week, which repeats Monday to Friday twice. i.e. ‘Monday’, ‘Tuesday’, ‘Wednesday’, ‘Thursday’, ‘Friday’, ‘Monday’, ‘Tuesday’, ‘Wednesday’, ‘Thursday’, ‘Friday’.
+```{r}
+day_of_week <- rep(c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"),2)
+```
+<h2>Q2.</h2>
+
+Create a vector called day_of_week_factor, which has the same data as day_of_week, but is of factor type.
+```{r}
+day_of_week_factor <- as.factor(day_of_week)
+```
+Create a vector called named_stock_prices, which contains the stock prices, named by days of the week.
+```{r}
+names(stock_prices) <- day_of_week_factor
+named_stock_prices <- stock_prices
+named_stock_prices
+```
+This was difficult for me and my code seems to be super inefficient, but it works :)
+
+<h2>Q3.</h2>
+
+Make a data frame called stock_data containing the stock price and day of the week information, and View() the result.
+```{r}
+stock_data <- data.frame(day_of_week, stock_prices)
+View(stock_data)
+```
+
+<h2>Q4.</h2>
+
+Make a list called stock_list with named elements as follows: the vector of stock_prices, the vector day_of_week, and the data frame you made in question 3. Choose sensible names for the list elements.
+```{r}
+stock_list <- list(
+  day = day_of_week_factor,
+  price = stock_prices
+)
+stock_list
+
+```
+<h1>Part 2</h1>
+
+<h2>Q1.</h2>
+
+Select the 4th, 5th and 6th stock prices from stock_prices.
+```{r}
+stock_prices[4:6]
+```
+Select the stock prices greater than 30 from stock_prices.
+```{r}
+stock_prices[stock_prices > 30]
+```
+<h2>Q2.</h2>
+
+Select the day_of_week column from the stock_data data frame.
+```{r}
+stock_data$day_of_week
+```
+Select the rows of the stock_data data frame where the stock_prices are less than 25.
+```{r}
+subset(stock_data, stock_prices < 25)
+```
+Select the 1st column of stock_data.
+```{r}
+stock_data[, 1]
+```
+Select the 3rd row of stock_data.
+```{r}
+stock_data[3, ]
+```
+Select the 3rd element in the 1st column of stock_data.
+```{r}
+stock_data[3, 1]
+```
+
+```{r}
+stock_data
+```
+
+<h2>Q3.</h2>
+Select the data frame from within the list of stocks.
+```{r}
+data.frame(stock_list)
+```
+<h1>Extension</h1>
+
+Download the tidyquant library.
+
+<code> install.packages("tidyquant")
+
+library(tidyquant)</code>
+```{r include=FALSE}
+install.packages("tidyquant")
+library(tidyquant)
+```
+Use it to get stock prices from a company of your choice from the current year. You’ll need to look up the help file to do this.
+```{r}
+help(package = "tidyquant")
+```
+```{r}
+apple_stock <- data.frame(getYahooData("AAPL", 20200101, freq = "monthly", adjust = FALSE))
+apple_stock
+```
+Edit the data frame to keep only the date and close columns.
+```{r}
+apple_stock$Close
+```
+But I could not assign a column name to the first column.
+
+Subset to find the rows at which the close price is higher than average.
+```{r}
+mean_value <- mean(apple_stock$Open, apple_stock$High, apple_stock$Low, trim = 1)
+subset(apple_stock, apple_stock$Close > mean_value)
+```
