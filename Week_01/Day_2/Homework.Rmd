@@ -23,8 +23,8 @@ day_of_week_factor <- as.factor(day_of_week)
 ```
 Create a vector called named_stock_prices, which contains the stock prices, named by days of the week.
 ```{r}
-names(stock_prices) <- day_of_week_factor
 named_stock_prices <- stock_prices
+names(named_stock_prices) <- day_of_week
 named_stock_prices
 ```
 This was difficult for me and my code seems to be super inefficient, but it works :)
@@ -43,7 +43,8 @@ Make a list called stock_list with named elements as follows: the vector of stoc
 ```{r}
 stock_list <- list(
   day = day_of_week_factor,
-  price = stock_prices
+  price = stock_prices,
+  stock_data
 )
 stock_list
 
@@ -119,6 +120,11 @@ But I could not assign a column name to the first column.
 
 Subset to find the rows at which the close price is higher than average.
 ```{r}
-mean_value <- mean(apple_stock$Open, apple_stock$High, apple_stock$Low, trim = 1)
-subset(apple_stock, apple_stock$Close > mean_value)
+#mean_value <- mean(apple_stock$Open, apple_stock$High, apple_stock$Low, trim = 1)
+apple_stock$Mean <- mean(apple_stock$Open, apple_stock$High, apple_stock$Low, trim = 1)
+subset(apple_stock, apple_stock$Close > apple_stock$Mean)
 ```
+
+
+
+
