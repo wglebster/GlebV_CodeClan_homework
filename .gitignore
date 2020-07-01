@@ -2,4 +2,5 @@
 file_to_ignore.txt
 .Rproj.user
 #Ignore already uploaded projects, to keep them intact in the repo
-/Users/glebvulf/Desktop/CodeClan/Codeclan_work/Homework/Week_01/Day_2
+Week_01/Day_2/Homework.Rmd
+Week_01/Day_2/Homework.nb.html
