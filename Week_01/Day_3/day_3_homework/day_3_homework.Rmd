@@ -42,7 +42,7 @@ plot(years, mean_temp, main = "Mean temperature",
 
 #Facts about temp_data:
 1. In the given period I the mean temerature is rising, but the rise is not linear
-2. In May the the temperature seems to be the most predictable ranging from 9.8 to 15.3, but mean and median averages lieng within 0.01 degrees, which indicated the most even distribution
+2. In May the the temperature seems to be the most predictable with mean and median averages lieng within 0.01 degrees, which indicates that May is least likely to record extreme temperatures.
 
 
 
