@@ -1,0 +1,68 @@
+---
+title: "Gleb V homework 01/07/2020"
+output: html_notebook
+---
+#beer data
+```{r}
+#get beer data
+beer_data <- CodeClanData::beer
+head(beer_data, 2)
+```
+```{r}
+beer_data[order(beer_data$percent, decreasing = TRUE), ]
+mean(beer_data$percent)
+median(beer_data$percent)
+```
+#Facts about beer_data
+1. The highest alcohol content beer is "Flying Dog Double Dog\xca", with 11.5 %abv.
+2. The average alcohol content is around 5.2%, and median is 4.9%. This tells me that people prefer beers with higher alcohol content. (Using demand/supply logic)
+
+
+#temp data
+```{r}
+#get temp data
+temp_data <- CodeClanData::temp
+years <- (1910:2015)
+rownames(temp_data) <- years
+```
+Arrange years by average temperature from warmest to coldest.
+```{r}
+mean_temp <- rowMeans(temp_data)
+coldest_to_warmest <- order(mean_temp, decreasing = TRUE) #wrong vector name
+years[coldest_to_warmest]
+```
+(cheating) The summary of the temp_data matrix by month for all sorts of interesting insights arranged by month.
+```{r}
+summary(temp_data)
+```
+```{r}
+plot(years, mean_temp, main = "Mean temperature",
+     ylab = "Mean temp in degrees C")
+```
+
+#Facts about temp_data:
+1. In the given period I the mean temerature is rising, but the rise is not linear
+2. In May the the temperature seems to be the most predictable ranging from 9.8 to 15.3, but mean and median averages lieng within 0.01 degrees, which indicated the most even distribution
+
+
+
+#GoT data
+```{r}
+#get game_of_thrones data
+got_data <- CodeClanData::game_of_thrones
+got_data$characters[4]
+```
+#GoT facts
+1. There are 434 charachters in the book.
+2. name: Margaery Tyrell, gender: Female
+
+
+
+
+
+
+
+
+
+
+
