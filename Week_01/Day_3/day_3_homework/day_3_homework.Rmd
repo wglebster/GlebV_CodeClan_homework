@@ -14,7 +14,9 @@ mean(beer_data$percent)
 median(beer_data$percent)
 ```
 #Facts about beer_data
-1. The highest alcohol content beer is "Flying Dog Double Dog\xca", with 11.5 %abv.
+
+1. The highest alcohol content beer is "Flying Dog Double Dog xca, with 11.5 %abv.
+
 2. The average alcohol content is around 5.2%, and median is 4.9%. This tells me that people prefer beers with higher alcohol content. (Using demand/supply logic)
 
 
@@ -24,26 +26,36 @@ median(beer_data$percent)
 temp_data <- CodeClanData::temp
 years <- (1910:2015)
 rownames(temp_data) <- years
+annual_temp <- t(temp_data)
+annual_temp
 ```
-Arrange years by average temperature from warmest to coldest.
+Average monthly temperatures.
 ```{r}
-mean_temp <- rowMeans(temp_data)
-coldest_to_warmest <- order(mean_temp, decreasing = TRUE) #wrong vector name
-years[coldest_to_warmest]
+mean_monthly <- colMeans(temp_data)
+mean_monthly
 ```
+Average, avg coldest, avg, warmest annual temperatures.
+```{r}
+mean_annual <- rowMeans(temp_data)
+mean_annual
+min(mean_annual)
+max(mean_annual)
+```
+
 (cheating) The summary of the temp_data matrix by month for all sorts of interesting insights arranged by month.
 ```{r}
 summary(temp_data)
 ```
 ```{r}
-plot(years, mean_temp, main = "Mean temperature",
+plot(years, mean_annual, main = "Mean temperature",
      ylab = "Mean temp in degrees C")
 ```
 
 #Facts about temp_data:
-1. In the given period I the mean temerature is rising, but the rise is not linear
-2. In May the the temperature seems to be the most predictable with mean and median averages lieng within 0.01 degrees, which indicates that May is least likely to record extreme temperatures.
 
+1. From the above chart it is clearly visible that in the given period the mean annual temerature is rising.
+
+2. In May the the temperature seems to be the most predictable with mean and median averages lieng within 0.01 degrees, which indicates that May is least likely to record extreme temperatures.
 
 
 #GoT data
@@ -53,7 +65,9 @@ got_data <- CodeClanData::game_of_thrones
 got_data$characters[4]
 ```
 #GoT facts
+
 1. There are 434 charachters in the book.
+
 2. name: Margaery Tyrell, gender: Female
 
 
