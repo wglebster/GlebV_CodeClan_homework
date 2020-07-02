@@ -49,7 +49,8 @@ paste(warmest_temp_year, collapse = " ")
 summary(temp_data)
 ```
 ```{r}
-plot(years, mean_annual, main = "Mean temperature",
+plot(years, mean_annual, 
+     main = "Mean temperature",
      ylab = "Mean temp in degrees C")
 ```
 
