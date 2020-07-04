@@ -1,0 +1,160 @@
+---
+title: "Gleb V weekend homework 04/07/2020"
+output: html_notebook
+---
+
+#Control flow
+
+##if statements and functions.
+
+Write a function which multiples all numbers by 15 and adds 4.
+
+```{r}
+mult_by_15_add_4 <- function(x = NULL){
+  if(is.null(x)|!is.numeric(x)){
+    return("Please enter numeric value")
+  } else {
+    by_15 <- x * 15
+    add_4 <- by_15 + 4
+  }
+  return(add_4)
+}
+mult_by_15_add_4(1)
+mult_by_15_add_4(2)
+mult_by_15_add_4(3)
+mult_by_15_add_4()
+mult_by_15_add_4("two")
+```
+
+Write a function that returns “bird”, if the input is “goose”, “duck” or “pigeon”, and returns “not bird” for all other input.
+```{r}
+#correct basic version
+is_bird <- function(x = "no_value"){
+  if(x == "no_value"){
+    return("Plese enter some text")
+  } else {
+    dplyr::case_when(
+    x == "goose" ~ paste("bird"),
+    x == "duck" ~ paste("bird"),
+    x == "pigeon" ~ paste("bird"),
+    TRUE ~ paste("not bird")
+    )
+  }
+}
+
+is_bird()
+is_bird("Pterodactyl")
+is_bird("Sparrow, surely it's a bird, lets see...")
+is_bird("goose")
+is_bird("duck")
+is_bird("pigeon")
+```
+
+```{r}
+#having an explicit return statement after case_when produces erroneous output.
+is_bird <- function(x = "no_value"){
+  input <- c(x)
+  if(input == "no_value"){
+    return("Plese enter some text")
+  } else {
+    #needs an object assignment to case when, then return object:
+    # output <- 
+    dplyr::case_when( 
+    input == "goose" ~ paste("bird"),
+    input == "duck" ~ paste("bird"),
+    input == "pigeon" ~ paste("bird"),
+    TRUE ~ paste("not bird")
+    )
+  }
+  return(input) # change return argument to output
+}
+
+is_bird()
+is_bird("Pterodactyl")
+is_bird("Sparrow, surely it's a bird, lets see...")
+is_bird("goose")
+is_bird("duck")
+is_bird("pigeon")
+```
+Write a function which multiplies all numbers by 10. If the input isn’t a number, the function should return “Invalid input”.
+```{r}
+by_ten <- function(x){
+  if(is.null(x) | !is.numeric(x)){
+    error_msg <- c("Invalid input")
+    return(error_msg)
+  } else { 
+    result <- x * 10
+    return(result)
+    }
+}
+by_ten(2)
+by_ten(5.3)
+by_ten("x")
+by_ten(7)
+```
+For the vector below, make a new vector which is equal to “Big” every time the element of sizes is greater than 10, and equal to “Small” every time the element of sizes is less than or equal to 10.
+```{r}
+sizes <- c(13, 15, 10, 8, 22)
+new_vector <- ifelse(sizes > 10, "Big", sizes)
+new_vector
+```
+For the vector below convert:
+apple → alpaca, banana → bonobo, cherry → chipmunk
+```{r}
+fruit <- c("apple", "apple", "banana", "cherry", "cherry")
+not_fruit <- dplyr::recode(fruit, "apple" = "alpaca", 
+                           "banana" = "bonobo", 
+                           "cherry" = "chipmunk")
+not_fruit
+
+```
+Create a new vector which is equal to:
+“Wife older” whenever the wife’s age is highest “Husband older” when the husband’s age is highest “Same age” when they are the same age.
+```{r}
+wife_age <- c(29L, 30L, 36L, 31L, 22L)
+husband_age <- c(28L, 35L, 32L, 31L, 29L)
+
+comparison <- dplyr::case_when(
+  wife_age > husband_age ~ paste("Wife older"),
+  wife_age < husband_age ~ paste("Husband older"),
+  wife_age == husband_age ~ paste("Same age")
+)
+data.frame(wife_age, comparison, husband_age)
+```
+# Loops
+```{r}
+my_list <- list(
+  4,
+  "apple",
+  10.5,
+  c("is", "an", "apple"),
+  "apple",
+  c("i", "like", "apples"),
+  8
+)
+class(my_list[[2]][1])
+my_list
+```
+Use a loop to print out every element of my_list which is of type character. Decide if you need a for loop or a while loop.
+```{r}
+for(char in my_list){
+  if (class(char) == "character") {
+    print(char)
+  }
+}
+```
+Once again write a loop that prints out character elements. This time if the element has a length() greater than one, paste() all the elements in that vector together into one big character vector.
+```{r}
+to_fill <- c()
+for (item in my_list) {
+  if(length(item) > 2){
+    to_fill <- c(to_fill, item)
+  }
+}
+print(to_fill)
+class(to_fill)
+```
+
+
+
+
