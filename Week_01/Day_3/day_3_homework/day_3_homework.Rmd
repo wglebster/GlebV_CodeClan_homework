@@ -37,10 +37,10 @@ mean_monthly
 Average, avg coldest, avg, warmest annual temperatures.
 ```{r}
 mean_annual <- rowMeans(temp_data)
-mean_annual
-coldest_temp_year <- list("The lowest average temperature of ", min(mean_annual), "degrees C was recorded in", years[min(mean_annual)])
+round(mean_annual, digits = 2)
+coldest_temp_year <- list("The lowest average temperature of ", round(min(mean_annual), digits = 2) , "degrees C was recorded in", years[min(mean_annual)])
 paste(coldest_temp_year, collapse = " ")
-warmest_temp_year <- list("The warmest average temperature of ", max(mean_annual), "degrees C was recorded in", years[max(mean_annual)])
+warmest_temp_year <- list("The warmest average temperature of ", round(max(mean_annual), digits = 2) , "degrees C was recorded in", years[max(mean_annual)])
 paste(warmest_temp_year, collapse = " ")
 ```
 
