@@ -156,5 +156,31 @@ class(to_fill)
 ```
 
 
+# Extension
+
+Write code that prints a multiplication table for numbers up to 12. i.e. there will be 12 rows and 12 columns, and each element should be the row number multiplied by the column number.
+```{r}
+iter_val<- 1 #sequence start 
+stop_val <- 144 #sequence stop
+matrix_vec <- c() #each iteration  of the loop adds one number to the vector
+
+while(iter_val <= stop_val) { #sequence stops after 144 iterations
+  #each number is multiplied by 12 as it is appended to the vector
+  matrix_vec <- c(matrix_vec, iter_val * 12) 
+  #increases iterable value by one
+  iter_val <- iter_val + 1 
+}
+#convert vector to matrix of 12rows and 12 columns
+matrix_final <- matrix(matrix_vec, nrow = 12, ncol = 12, byrow = FALSE) 
+#display matrix
+matrix_final 
+```
+Not Completed --
+Write a function that takes a vector, and creates a text art histogram.
+You may want to use the function cat(). This is similar to print(), but prints directly, without vector markers. You can also include newlines "\n" when using cat().--
+-----
+By considering the terms in the Fibonacci sequence whose values do not exceed four million, find the sum of the even-valued terms.
+
+
 
 
