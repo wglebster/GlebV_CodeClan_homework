@@ -1,0 +1,112 @@
+---
+title: "Gleb V homework 2020-07-06"
+output: html_notebook
+---
+
+Read in the state_income_data.csv file using the appropriate function.
+```{r}
+#import library "readr"
+library(readr)
+library(dplyr)
+#load JSON library too
+library(jsonlite)
+#load library to deal with excel
+library(readxl)
+```
+
+```{r}
+head(read_csv("data/state_income_data.csv")) #read file
+```
+How do you specify your own column names when using read_csv()
+```{r}
+#skip one (first row of the raw dataset, specify custom variable names (column names),  making sure that total number of variables(columns) matches the raw dataset
+state_income_data <- read_csv("data/state_income_data.csv", skip = 1, 
+                              col_names = c("first_letter", "state", "2002", "2003",
+                                            "2004", "2005", "2006",
+                                            "2007", "2008", "2009", "2010", "2011",
+                                            "2012", "2013", "2014", "2015"))
+state_income_data
+```
+Read in the cars.csv file and use the col_types() function to ensure you load in:
+X1 as character
+mpg, cyl, disp, hp as double
+vs as logical
+```{r}
+#load raw file
+cars_raw <- read_csv("data/cars.csv")
+#check variable types first
+str(cars_raw)
+```
+```{r}
+#variable types are alreay specified correctly, except for variable "vs", change it to logical type
+#read in cars dataset and change variable vs type to logical
+cars_raw <- read_csv("data/cars.csv", col_types = cols(vs = col_logical()))
+head(cars_raw)
+str(cars_raw)
+```
+Read in the scotland.txt file using the appropriate function.
+```{r}
+#read file and assign it to object "scotland"
+scotland <- read_tsv("data/scotland.txt")
+scotland
+```
+```{r}
+#this file seems to be delimited by tab and ";" and it has "Edinburgh" in the first row. I can convert it to list, without losing "Edinburgh"
+scotland_list <- lapply(scotland, strsplit, split = ";")
+scotland_list
+```
+```{r}
+#alternatively I can skip the first row and do away with "Edinburgh"
+scotland_df <- read_delim("data/scotland.txt", skip = 1, delim = ";")
+scotland_df
+```
+
+How do you read text into a one element character vector? - Using read_file()
+```{r}
+s_v <- read_file("data/scotland.txt")
+s_v
+```
+Read in the steam-200k-sample.csv file. Fix any problems you may encounter.
+```{r}
+#open file in excel, first 4 rows have unneccessary data, variable "bought online" should be logical.
+
+#read in file skipping first 4 rows and changing variable type.
+steam_raw <- read_csv("data/steam-200k-sample.csv", skip = 4, col_types = cols("bought online" = col_logical()))
+#rename variables (columns) for easier processing in the future.
+data.table::setnames(steam_raw, old = c("customer id", "game name", "bought online"), 
+                     new = c("customer_id", "game_name", "bought_online"))
+steam_raw
+```
+Read in the historic_eu_payments.tsv file.
+```{r}
+eu_payments <- read_tsv("data/historic_eu_payments.tsv")
+eu_payments
+```
+How do you read lines of text into a multi-element text vector? - read_lines()
+
+Read in the JSON file from the following url: http://makemeanalyst.com/wp-content/uploads/2017/06/sample_json.txt
+```{r}
+jsread <- read_file("http://makemeanalyst.com/wp-content/uploads/2017/06/sample_json.txt")
+jsread_pretty <- prettify(jsread) 
+jsread_parse <- parse_json(jsread)
+jsread_df <- fromJSON(jsread)
+
+
+
+```
+
+A lot of Excel sheets you will encounter will contain more than one sheet. Try to write some code that reads in all the different sheets in the file green_bindle_consulting.xlsx.
+
+```{r}
+gbc <- read_xlsx("data/green_bindle_consulting.xlsx", sheet = sheet)
+num_steets <- length(excel_sheets("data/green_bindle_consulting.xlsx"))
+sheet_num <- 1
+all_sheets <- c()
+while(sheet_num <= num_steets){
+  read_xlsx("data/green_bindle_consulting.xlsx", sheet = sheet_num)
+     all_sheets <- c(all_sheets, sheet)
+     sheet_num + 1
+}
+```
+
+

@@ -95,7 +95,7 @@ by_ten(7)
 For the vector below, make a new vector which is equal to “Big” every time the element of sizes is greater than 10, and equal to “Small” every time the element of sizes is less than or equal to 10.
 ```{r}
 sizes <- c(13, 15, 10, 8, 22)
-new_vector <- ifelse(sizes > 10, "Big", sizes)
+new_vector <- ifelse(sizes > 10, "Big", "Small")
 new_vector
 ```
 For the vector below convert:
@@ -147,7 +147,7 @@ Once again write a loop that prints out character elements. This time if the ele
 ```{r}
 to_fill <- c()
 for (item in my_list) {
-  if(length(item) > 2){
+  if(length(item) > 1){
     to_fill <- c(to_fill, item)
   }
 }
@@ -166,7 +166,7 @@ matrix_vec <- c() #each iteration  of the loop adds one number to the vector
 
 while(iter_val <= stop_val) { #sequence stops after 144 iterations
   #each number is multiplied by 12 as it is appended to the vector
-  matrix_vec <- c(matrix_vec, iter_val * 12) 
+  matrix_vec <- c(matrix_vec, iter_val) 
   #increases iterable value by one
   iter_val <- iter_val + 1 
 }
