@@ -71,7 +71,7 @@ Read in the steam-200k-sample.csv file. Fix any problems you may encounter.
 #open file in excel, first 4 rows have unneccessary data, variable "bought online" should be logical.
 
 #read in file skipping first 4 rows and changing variable type.
-steam_raw <- read_csv("data/steam-200k-sample.csv", skip = 4, col_types = cols("bought online" = col_logical()))
+steam_raw <- read_csv("", skip = 4, col_types = cols("bought online" = col_logical()))
 #rename variables (columns) for easier processing in the future.
 data.table::setnames(steam_raw, old = c("customer id", "game name", "bought online"), 
                      new = c("customer_id", "game_name", "bought_online"))
@@ -89,8 +89,9 @@ Read in the JSON file from the following url: http://makemeanalyst.com/wp-conten
 jsread <- read_file("http://makemeanalyst.com/wp-content/uploads/2017/06/sample_json.txt")
 jsread_pretty <- prettify(jsread) 
 jsread_parse <- parse_json(jsread)
-#jsread_df <- fromJSON(jsread)
+jsread_df <- fromJSON(jsread)
 jsread_df1 <- lapply(jsread_parse, as.data.frame)
+jsread_df
 
 ```
 
@@ -103,7 +104,7 @@ read_excel_allsheets <- function(filename, tibble = FALSE) {
 #Tidyverse tibble can be used (the default with read_excel), then should be tibble = TRUE
   sheets <- excel_sheets(filename)
   x <- lapply(sheets, function(X) read_excel(filename, sheet = X))
-  if(!tibble) x <- lapply(x, as.data.frame)
+  if(!tibble) x <- lapply(x,  as.data.frame) #can be output as list: lapply(x,  as.list)
   names(x) <- sheets
   return(x)
 }
