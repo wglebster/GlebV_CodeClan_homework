@@ -1,0 +1,65 @@
+---
+title: "Gleb V homework 2020-07-07"
+output: html_notebook
+---
+I created database wrestling using terminal command "createdb wrestling", then seed it using script "psql -d wrestling -f wrestling.sql" and to check that it has worked correctly, I run "psql -d wrestling -f db_query.sql". The file db_query.sql has the following script inside: "SELECT * FROM wrestlers. 
+------------
+Create a connection to the local wrestling database from R.
+Pass the argument max.con = 2 to PostgreSQL() to make sure you don’t have too many simultaneous connections. We’ll be setting up a local connection and perhaps a remote connection, hence ‘2’.
+Remember to add a separate ‘disconnect’ block of code. We’ll write queries between the ‘connect’ and ‘disconnect’ blocks.
+
+```{r}
+library(RPostgreSQL) #import psql library
+credentials_location <- paste0(Sys.getenv("HOME"),"/credentials.R") #get file path to credentials.
+source(credentials_location) #source in credentials
+```
+```{r}
+#create db connection
+wrestling_db_connection <- dbConnect(drv = PostgreSQL(max.con = 2), user = postgresql_username, password = postgresql_password, dbname = 'wrestling', host = 'localhost')
+```
+```{r}
+dbListTables(conn = wrestling_db_connection) #check what table names are contained in the database
+dbListFields(conn = wrestling_db_connection, name = "wrestlers")#check which fields (columns) are contained in the database. ¡NB! even though "wrestlers" is the only table in this database, name has to specified, otherwise the function returns an error.
+```
+Using the R connection you just created, write and execute a SQL query to return all the wrestlers in the wrestlers table.
+```{r}
+wrestling_data <- dbGetQuery(conn = wrestling_db_connection, statement = 
+                               "SELECT * FROM wrestlers")
+wrestling_data
+```
+Explore the columns stored in the table. State which data type you think each column stores.
+```{r}
+str(wrestling_data)
+```
+Use your credentials to establish a connection from R to the remote database.
+```{r}
+wrestling_remote_db_connection <- dbConnect(drv = PostgreSQL(max.con = 2), user = remote_omni_postgresql_username, password = remote_omni_postgresql_password, dbname = 'mvhbdgdk', host = 'manny.db.elephantsql.com')
+```
+Using this R connection, write and execute a query to return all the wrestlers from the wrestlers table.
+```{r}
+#Check what tables db contains
+dbListTables(conn = wrestling_remote_db_connection)
+#check all fields (columns)
+dbListFields(conn = wrestling_remote_db_connection, name = "wrestlers")
+```
+Now return all wrestlers
+```{r}
+remote_wrestlers <- dbGetQuery(conn = wrestling_remote_db_connection, 
+                               statement = 
+                                 "SELECT * FROM wrestlers")
+remote_wrestlers
+```
+
+
+
+
+
+
+```{r}
+#close remote db once finished working with it.
+dbDisconnect(conn = remote_wrestlers)
+```
+
+
+
+
