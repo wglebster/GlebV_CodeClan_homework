@@ -41,7 +41,7 @@ str(cars_raw)
 #variable types are alreay specified correctly, except for variable "vs", change it to logical type
 #read in cars dataset and change variable vs type to logical
 cars_raw <- read_csv("data/cars.csv", col_types = cols(vs = col_logical()))
-head(cars_raw)
+hcars_raw
 str(cars_raw)
 ```
 Read in the scotland.txt file using the appropriate function.
@@ -89,15 +89,29 @@ Read in the JSON file from the following url: http://makemeanalyst.com/wp-conten
 jsread <- read_file("http://makemeanalyst.com/wp-content/uploads/2017/06/sample_json.txt")
 jsread_pretty <- prettify(jsread) 
 jsread_parse <- parse_json(jsread)
-jsread_df <- fromJSON(jsread)
-
-
+#jsread_df <- fromJSON(jsread)
+jsread_df1 <- lapply(jsread_parse, as.data.frame)
 
 ```
 
 A lot of Excel sheets you will encounter will contain more than one sheet. Try to write some code that reads in all the different sheets in the file green_bindle_consulting.xlsx.
 
 ```{r}
+#this is code I found on StackOverflow
+#these functions use the library(readxl)
+read_excel_allsheets <- function(filename, tibble = FALSE) {
+#Tidyverse tibble can be used (the default with read_excel), then should be tibble = TRUE
+  sheets <- excel_sheets(filename)
+  x <- lapply(sheets, function(X) read_excel(filename, sheet = X))
+  if(!tibble) x <- lapply(x, as.data.frame)
+  names(x) <- sheets
+  return(x)
+}
+read_excel_allsheets("data/green_bindle_consulting.xlsx")
+```
+
+```{r}
+#this is my own attempted solution
 gbc <- read_xlsx("data/green_bindle_consulting.xlsx", sheet = sheet)
 num_steets <- length(excel_sheets("data/green_bindle_consulting.xlsx"))
 sheet_num <- 1
