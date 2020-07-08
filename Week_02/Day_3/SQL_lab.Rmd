@@ -1,0 +1,170 @@
+---
+title: "SQL Lab 2020-07-08"
+output: html_notebook
+---
+Import SQL library
+```{r}
+library(RPostgreSQL)
+```
+Create root path and connect to credentials
+```{r}
+credentials_location <- paste0(Sys.getenv("HOME"),"/credentials.R")
+source(credentials_location)
+```
+Create DB connection
+```{r}
+db_conect <- dbConnect(drv = PostgreSQL(), user = postgresql_username, password = postgresql_password, dbname = "omni_employees", host = "localhost")
+rm(postgresql_username, postgresql_password, remote_omni_postgresql_password, remote_omni_postgresql_username)
+```
+Check if connetion was successful and list all tables
+```{r}
+dbListTables(conn = db_conect)
+```
+```{r}
+dbListFields(conn = db_conect, name = "employees")
+```
+
+# Lab
+
+Find all employees working in the HR.
+```{sql connection=db_conect}
+SELECT *
+FROM employees
+WHERE department = 'Human Resources';
+```
+Get names (f & l) and country of the Legal dept employees
+```{sql connection=db_conect}
+SELECT 
+  first_name,
+  last_name,
+  country
+FROM employees
+WHERE department = 'Legal';
+```
+
+how many employees are based in Portugal.
+```{sql connection=db_conect}
+SELECT
+ COUNT(id) AS num_employees_in_portugal
+FROM employees
+WHERE country = 'Portugal';
+```
+
+how many employees are based in Portugal or Spain
+```{sql connection=db_conect}
+SELECT 
+  COUNT(id) AS total_employees_in_portugal_or_spain
+FROM employees
+WHERE country IN ('Portugal', 'Spain');
+```
+
+count records in pay_details where local_account_no is NULL
+```{sql connection=db_conect}
+SELECT 
+  COUNT(id) count_of_missing_local_account_details
+FROM pay_details
+WHERE local_account_no IS NULL;
+```
+check if there are any records without local_account_no and iban
+```{sql connection=db_conect}
+SELECT 
+  id, 
+  local_account_no,
+  iban
+FROM pay_details
+WHERE local_account_no IS NULL AND iban IS NULL;
+```
+list all employees (f & l names) by l name aplhabetically, dont show null vaslues.
+```{sql connection=db_conect}
+SELECT
+  first_name,
+  last_Name
+FROM employees
+ORDER BY last_name ASC NULLS LAST;
+```
+find top 10 highest paid employees
+```{sql connection=db_conect}
+SELECT *
+FROM employees
+ORDER BY salary DESC NULLS LAST
+LIMIT 10;
+```
+
+find fname lname and salary of the lowest paid employees in Hungary
+```{sql connection=db_conect}
+SELECT
+  first_name,
+  last_name,
+  salary
+FROM employees
+WHERE country = 'Hungary'
+ORDER BY salary ASC NULLS LAST;
+--LIMIT ??
+```
+
+
+```{sql connection=db_conect}
+SELECT * 
+FROM employees
+WHERE country = 'Hungary';
+```
+
+count employees whos fname starts with "F"
+```{sql connection=db_conect}
+SELECT 
+  COUNT(id) AS number_of_F_employees 
+FROM employees
+WHERE first_name LIKE 'F%';
+```
+get all details of all employees with "yahoo" email.
+```{sql connection=db_conect}
+SELECT *
+FROM employees
+WHERE email LIKE '%@yahoo%';
+```
+
+how many employees not in France or Germany are enrolled in pension
+```{sql connection=db_conect}
+SELECT 
+  COUNT(id) AS number_of_employees_enrolled_in_pension
+FROM employees
+WHERE country NOT IN ('France', 'Germany') AND pension_enrol = TRUE;
+```
+
+get a breakdown of numbers of employees enrolled/not enrolled/unknown in the pension plan.
+
+```{sql connection=db_conect}
+SELECT
+  pension_enrol,
+  COUNT(id) AS pension_enrol_count
+FROM employees
+GROUP BY pension_enrol;
+```
+find max engineering dept salary who work 1.0 fte
+```{sql connection=db_conect}
+SELECT 
+  MAX(salary) 
+FROM employees
+WHERE department = 'Engineering' AND fte_hours = '1.0';
+```
+how many employees who started in 2003 are working in each dept
+```{sql connection=db_conect}
+SELECT 
+  department,
+  COUNT(id) AS number_of_employees
+FROM employees
+WHERE EXTRACT(YEAR FROM start_date) = 2003
+GROUP BY department;
+```
+
+
+
+
+
+disconnect from db before finishing the project.
+```{r}
+#dbDisconnect(db_conect)
+```
+
+
+
