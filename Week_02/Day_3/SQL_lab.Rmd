@@ -80,7 +80,7 @@ SELECT
   first_name,
   last_Name
 FROM employees
-ORDER BY last_name ASC NULLS LAST;
+ORDER BY LOWER(last_name) ASC NULLS LAST;
 ```
 list of employees first names, last names and countries, ordered alphabetically first by their country and second by their last name (put any nulls last).
 ```{sql connection=db_conect}
@@ -89,7 +89,7 @@ SELECT
   last_name,
   country
 FROM employees
-ORDER BY country ASC, last_name ASC NULLS LAST;
+ORDER BY country ASC, UPPER(last_name) ASC NULLS LAST;
   
 ```
 
@@ -110,8 +110,8 @@ SELECT
   salary
 FROM employees
 WHERE country = 'Hungary'
-ORDER BY salary ASC NULLS LAST;
---LIMIT ??
+ORDER BY salary ASC NULLS LAST
+LIMIT 1;
 ```
 
 
@@ -126,13 +126,13 @@ count employees whos fname starts with "F"
 SELECT 
   COUNT(id) AS number_of_F_employees 
 FROM employees
-WHERE first_name LIKE 'F%';
+WHERE UPPER(first_name) LIKE 'F%';
 ```
 get all details of all employees with "yahoo" email.
 ```{sql connection=db_conect}
 SELECT *
 FROM employees
-WHERE email LIKE '%@yahoo%';
+WHERE LOWER(email) LIKE '%yahoo%';
 ```
 
 how many employees not in France or Germany are enrolled in pension
@@ -166,16 +166,14 @@ SELECT
   COUNT(id) AS number_of_employees
 FROM employees
 WHERE EXTRACT(YEAR FROM start_date) = 2003
-GROUP BY department;
+GROUP BY department
+ORDER BY number_of_employees DESC;
 ```
-
-
-
 
 
 disconnect from db before finishing the project.
 ```{r}
-#dbDisconnect(db_conect)
+dbDisconnect(db_conect)
 ```
 
 
