@@ -82,6 +82,18 @@ SELECT
 FROM employees
 ORDER BY last_name ASC NULLS LAST;
 ```
+list of employees first names, last names and countries, ordered alphabetically first by their country and second by their last name (put any nulls last).
+```{sql connection=db_conect}
+SELECT 
+  first_name,
+  last_name,
+  country
+FROM employees
+ORDER BY country ASC, last_name ASC NULLS LAST;
+  
+```
+
+
 find top 10 highest paid employees
 ```{sql connection=db_conect}
 SELECT *
