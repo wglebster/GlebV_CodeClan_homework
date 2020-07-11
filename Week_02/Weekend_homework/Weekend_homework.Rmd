@@ -1,0 +1,202 @@
+---
+title: "Week 2 Weekend Homework"
+output: html_notebook
+---
+
+Import SQL library
+```{r}
+library(RPostgreSQL)
+```
+Create root path and connect to credentials
+```{r}
+credentials_location <- paste0(Sys.getenv("HOME"),"/credentials.R")
+source(credentials_location)
+```
+Create DB connection
+```{r}
+db_conect <- dbConnect(drv = PostgreSQL(), user = postgresql_username, password = postgresql_password, dbname = "acme_employees", host = "localhost")
+```
+```{r}
+#rm(postgresql_username, postgresql_password, remote_omni_postgresql_password, remote_omni_postgresql_username)
+```
+
+Check if connetion was successful and list all tables
+```{r}
+dbListTables(conn = db_conect)
+```
+```{r}
+dbListFields(conn = db_conect, name = "teams" )
+```
+
+-------
+
+Create a new data.frame containing the details of all employees held in the database.
+CHECK: How to assign a variable using a codechunk
+```{sql connection=db_conect}
+SELECT * 
+FROM employees
+```
+```{r}
+emlpoyees_dataframe <- dbGetQuery(db_conect, "SELECT * FROM employees")
+emlpoyees_dataframe
+```
+
+-------
+
+Retrieve the records for all employees again, but this time add a field full_name containing the first_name and last_name of each employee separated by a space.
+```{sql connection=db_conect}
+SELECT
+  first_name,
+  last_name,
+  CONCAT(first_name, ' ', last_name) AS full_name
+FROM employees
+```
+
+------
+
+Retrieve the details of all employees again, but this time listing their team name (as team_name), rather than their team_id.
+```{sql connection=db_conect}
+SELECT 
+  e.id,
+  e.first_name,
+  e.last_name,
+  e.email,
+  teams.name
+FROM employees AS e LEFT JOIN teams
+ON e.team_id = teams.id
+```
+
+------
+
+Do a breakdown of the number of employees per team (here we want two columns: team_name and num_employees). Order the table in decreasing number of employees. Include all teams, even if they have no employees.
+```{sql connection=db_conect}
+SELECT
+  teams.name AS name_of_team,
+  COUNT(employees.*) AS num_employees
+FROM employees RIGHT JOIN teams
+  ON employees.team_id = teams.id
+GROUP BY name_of_team
+ORDER BY num_employees DESC NULLS LAST
+```
+
+----
+
+AcmeCorp management want to send an email survey to each of their employees. However, they are worried that some of the employees may not receive the email either because their email addresses may be invalid (in that they don’t contain an ‘@’ symbol), or they may not have a stored email address at all. Can you find all these employees?
+
+```{sql connection=db_conect}
+SELECT 
+  first_name,
+  last_name,
+  email
+FROM employees
+WHERE email IS NULL OR email NOT LIKE '%@%'
+```
+
+---- 
+EXTENSION: 
+
+Which of the employees provided the most recent feedback? What was the date of this feedback?
+```{sql connection=db_conect}
+SELECT 
+  feedbacks.date,
+  feedbacks.message,
+  employees.first_name,
+  employees.last_name
+FROM employees FULL OUTER JOIN feedbacks
+  ON employees.id = feedbacks.employee_id
+ORDER BY feedbacks.date DESC NULLS LAST
+LIMIT 1
+```
+
+-----
+
+You are chatting with one of the AcmeCorp employees, and she mentions that one of the teams in the corporation has some employees whose first_name contains only their first initial, e.g. “D” instead of “Dionne”, “C” instead of “Charles” (they had a really formal administrator a few years back). Can you find the name of the team that she is most likely referring to (i.e. which team has the highest number of employees with single initial first_names)`?
+```{sql connection=db_conect}
+SELECT 
+  COUNT(employees.first_name) AS single_initial_count,
+  teams.name AS team_name
+FROM employees INNER JOIN teams
+  ON employees.team_id = teams.id
+WHERE employees.first_name LIKE '_'
+GROUP BY teams.name
+```
+
+----
+
+AcmeCorp would like you to perform very basic ‘sentiment analysis’ of the stored employee feedbacks. They have provided a set of ‘positive’ and ‘negative’ words to use to score feedback messages in this analysis.
+The score for each message should start at zero.
+Every time a ‘positive’ word occurs in a message, the message’s score should increase by 1 point.
+Every time a ‘negative’ word occurs in a message, the message’s score should decrease by 1 point.
+Punctuation marks should be removed prior to scoring [Hint - the gsub() function can help here. You probably want to pass fixed = TRUE into this function].
+Messages should also be converted to lowercase prior to scoring [Hint - the tolower() function can help here].
+Write R code to score all of the stored feedback messages according to these rules.
+
+```{r}
+positive_words <- c("great", "good", "happy", "content", "fulfilled", "fulfilled", "positive", "positives", "cheerful", "nice", "ambition", "ambitions", "ambitious", "friendly", "progress", "joy", "fast", "achieve", "achieving", "achievements", "best", "better",  "unlimited", "pros", "competitive", "opportunity", "advancement", "friendly", "smart", "interesting", "challenging", "grow", "caring", "balance", "helpful")
+
+negative_words <- c("worse", "worsening", "worst", "slow", "sluggish", "impatient", "unfulfilled", "unfulfilling", "negative", "bad", "limited", "limit", "limitations", "cons", "frustrated", "frustrating", "frustration", "dull", "boring", "politics", "political", "ignore", "ignored", "ignoring", "sad", "depressed", "depressing", "nasty", "stress", "stresses", "stressed", "horrid", "horrible", "terrible", "deadline", "deadlines", "uncaring", "remote")
+## First we obtained the feedbacks, with matching employees and their teams together in one dataframe.
+feedbacks_dataframe <- dbGetQuery(conn = db_conect, statement = 
+             "SELECT 
+                employees.first_name,
+                employees.last_name,
+                teams.name AS team_name,
+                feedbacks.message AS feedback_message
+              FROM employees FULL OUTER JOIN feedbacks
+                ON employees.id = feedbacks.employee_id
+              INNER JOIN teams
+                ON employees.team_id = teams.id
+              WHERE feedbacks.message IS NOT NULL")
+#feedbacks_dataframe
+
+## Next we split our solution code into two functions: clean_message() and score_message(), and ran these successively for each message stored in the database, storing the scores as we go. 
+clean_message <- function(message) {
+  lowercase_message <- tolower(message)
+  gsub("[[:punct:]]+", " ", x = lowercase_message)
+}
+clean_message_vactor <-  c(clean_message(feedbacks_dataframe$feedback_message))
+clean_message_vactor
+
+score <- ifelse(clean_message %in% positive_words, score <- score + 1, score)
+
+score
+
+# score_message() <- function(clean_message_vactor) {
+#   score <- 0
+#   ifelse(clean_message %in% positive_words, score <- score + 1, score)
+# #   if (clean_message(feedbacks_dataframe$feedback_message) %in%
+# #       positive_words) {
+# #       score <- score +1 
+# # } else {
+# #       clean_message(feedbacks_dataframe$feedback_message) %in% 
+# #       negative_words
+# #       score <- score - 1
+# # }
+#      return(score)
+#  }
+# score_message(clean_message(feedbacks_dataframe$feedback_message))
+
+## You will want to add the scores as a column in your dataframe containing feedbacks, employees and teams
+```
+
+```{sql connection=db_conect}
+SELECT 
+    employees.first_name,
+    employees.last_name,
+    teams.name AS team_name,
+    feedbacks.message AS feedback_message
+FROM employees FULL OUTER JOIN feedbacks
+    ON employees.id = feedbacks.employee_id
+INNER JOIN teams
+ON employees.team_id = teams.id
+WHERE feedbacks.message IS NOT NULL
+
+```
+
+
+
+```{r}
+#dbDisconnect(db_conect)
+```
+
+
