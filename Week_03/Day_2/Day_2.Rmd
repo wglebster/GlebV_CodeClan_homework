@@ -1,0 +1,132 @@
+---
+title: "Week_03_Day_2 homework"
+output: html_notebook
+---
+
+### Q1. Let’s start by loading the tidyverse library and reading the data in. You learned earlier this week how to get a feel for your data when you first load it in. Find out the dimensions, variable names, and print the first 10 rows.
+```{r}
+library(tidyverse)
+```
+```{r}
+face_descriptions <- read_csv("data/face_descriptions.csv")
+dim(face_descriptions)
+names(face_descriptions)
+head(face_descriptions, 10)
+#view(face_descriptions)
+#unique(face_descriptions$user_id)
+```
+
+###Q2. Do these variable names look tidy to you? What format is your data in (long or wide)?
+
+Variables are uniform, but it is difficult to understand what each variable represents. Possibly these variables represent question, or task numbers from 1 to 50. The first three variables (user_id, sex, age) are good descriptive variables.
+
+The data is wide.
+
+###Q3. The first problem you can always tackle is to get your data in an appropriate format. What format do you need?
+- It is recorded in wide format at the moment, o I will reshape it into long format.
+```{r}
+face_descriptions_long <- face_descriptions %>%
+  pivot_longer(cols = c(t1:t50),
+               names_to = "t_1-50",
+               values_to = "descriptions_1")
+#view(face_descriptions_long)
+```
+
+###Q4. Some people have given lengthy descriptions of the faces, some have only given one word. This can be problematic for analysis, if you eventually want to summarise key descriptions.
+
+Some people have split the description of the faces using a slash. Use the separate function to split apart the descriptions column so that if people have given more than one answer (i.e. if the data is separated by a /) it is moved into a new row.
+
+First, you’ll need to decide a cut off for how many responses you want to accept from people. Is one enough? Two? Three? Once you’ve decided how many descriptions you want to code, you’ll have to separate your description columns into that many columns.
+```{r}
+face_descriptions_split_cols <- face_descriptions_long %>%
+  separate(descriptions_1, into = c("description_1",
+                                    "description_2",
+                                    "description_3",
+                                    "description_4",
+                                    sep = "/")) %>%
+  select(c(user_id:description_4))
+
+face_descriptions_split_cols
+```
+
+###Q5. What do we need to do here so our description variables follow the rules of tidy data?
+Pivot_longer once more and create a single column with all_descriptions
+```{r}
+all_descriptions <- face_descriptions_split_cols %>%
+  pivot_longer(cols = c(description_1: description_4),
+               names_to = "description_id",
+               values_to = "all_descriptions")
+all_descriptions
+```
+
+###Q6. But, wait… another problem arises… not everyone provided three descriptions! So, if you look at the data, we have some missing values (NAs). We also have some nonsense descriptions (e.g. “f” and “.”). Let’s now sort these out. Use the filter function to get rid of NA’s and useless descriptions.
+```{r}
+filtered_descriptions <- all_descriptions %>%
+  filter(!is.na(all_descriptions)) %>% #removed all NAs
+  filter(!all_descriptions == "") %>% #removed all empty charachters
+  filter(!all_descriptions < nchar("abc")) %>% #attempted to remove chars shorter than 2.
+  filter(!all_descriptions %in% c(0:10)) #attempted to remove anything that contains any numbers 0-10
+
+filtered_descriptions
+```
+
+###Q7. Now we can actually find something out about our data. Let’s find out what the most common description of each face is. Earlier in the week you learnt how to pipe functions together to create summary stats. Group the data by description, and summarise the data by generating a count for each group.
+```{r}
+most_common_description <- filtered_descriptions %>%
+  group_by(all_descriptions) %>% # group by common words
+  summarise(number_of_descriptions = n()) %>% #count how many times each word was used
+  arrange(desc(number_of_descriptions)) #arrange by most common word count in descending order
+
+most_common_description
+```
+###Q8. Create a tibble called top_10_descriptions, which filters your arranged data so that it only takes the top 10 answers. This will help us answer the question: what are the most common descriptions of faces given?
+```{r}
+top_10_descriptions <- head(most_common_description, 10) # assign top 10 descriptions to "top_10_descriptions" object.
+```
+###Q9. Convert all to a pipe called "faces"
+
+```{r}
+faces <- read_csv("data/face_descriptions.csv") %>%
+  pivot_longer(cols = c(t1:t50),
+               names_to = "t_1-50",
+               values_to = "descriptions_1") %>%
+  separate(descriptions_1, into = c("description_1",
+                                    "description_2",
+                                    "description_3",
+                                    "description_4",
+                                    sep = "/")) %>%
+  select(c(user_id:description_4)) %>%
+  pivot_longer(cols = c(description_1: description_4),
+               names_to = "description_id",
+               values_to = "all_descriptions") %>%
+  filter(!is.na(all_descriptions)) %>% #removed all NAs
+  filter(!all_descriptions == "") %>% #removed all empty charachters
+  filter(!all_descriptions < nchar("abc")) %>% #attempted to remove chars shorter than 2.
+  filter(!all_descriptions %in% c(0:10)) %>% #attempted to remove anything that contains any numbers 0-10 
+  group_by(all_descriptions) %>% # group by common words
+  summarise(number_of_descriptions = n()) %>% #count how many times each word was used
+  arrange(desc(number_of_descriptions)) #arrange by most common word count in descending order
+```
+```{r}
+faces #call the object
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
