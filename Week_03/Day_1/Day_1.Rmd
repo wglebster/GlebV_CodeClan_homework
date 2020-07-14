@@ -25,8 +25,8 @@ drinks_calories
 Q3. Create a new variable (column) called calorie_diff, which stores the difference between 135 calories (135 calories = 10 cubes of sugar!) and the calories in each drink. (hint: you’ll want to subtract the calories from 135 to see which drink have more or less than 10 cubes of sugar).
 ```{r}
 calorie_diff <- mutate(drinks_calories, 
-                     calorie_diff = (Calories - 135) / 10)
-view(calorie_diff)
+                     calorie_diff = 135 - Calories)
+calorie_diff
 ```
 Q4. Summarise the mean number of calories in each beverage_category. Which 3 drinks have the most calories? Which 3 drinks have the least? Write a small summary of your findings.
 ```{r}
@@ -86,6 +86,7 @@ above_average_calories_by_prep
 Q7. Which is the best type of coffee drink to get if you’re worried about consuming too many calories?
 ```{r}
 lowest_calorie_drink <- Starbucks_calories %>%
+  filter(!Beverage_category %in% c("Smoothies", "Tazo® Tea Drinks"))%>%
   select(c("Beverage", "Calories")) %>%
   arrange(Calories) %>%
   head(1)
