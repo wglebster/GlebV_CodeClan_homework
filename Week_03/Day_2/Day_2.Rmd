@@ -29,7 +29,7 @@ face_descriptions_long <- face_descriptions %>%
   pivot_longer(cols = c(t1:t50),
                names_to = "t_1-50",
                values_to = "descriptions_1")
-#view(face_descriptions_long)
+face_descriptions_long
 ```
 
 ###Q4. Some people have given lengthy descriptions of the faces, some have only given one word. This can be problematic for analysis, if you eventually want to summarise key descriptions.
@@ -42,8 +42,8 @@ face_descriptions_split_cols <- face_descriptions_long %>%
   separate(descriptions_1, into = c("description_1",
                                     "description_2",
                                     "description_3",
-                                    "description_4",
-                                    sep = "/")) %>%
+                                    "description_4"),
+                                    sep = "([/,])") %>%
   select(c(user_id:description_4))
 
 face_descriptions_split_cols
@@ -64,7 +64,7 @@ all_descriptions
 filtered_descriptions <- all_descriptions %>%
   filter(!is.na(all_descriptions)) %>% #removed all NAs
   filter(!all_descriptions == "") %>% #removed all empty charachters
-  filter(!all_descriptions < nchar("abc")) %>% #attempted to remove chars shorter than 2.
+  filter(nchar(all_descriptions) > 3) %>% #attempted to remove chars shorter than 2.
   filter(!all_descriptions %in% c(0:10)) #attempted to remove anything that contains any numbers 0-10
 
 filtered_descriptions
@@ -93,16 +93,14 @@ faces <- read_csv("data/face_descriptions.csv") %>%
   separate(descriptions_1, into = c("description_1",
                                     "description_2",
                                     "description_3",
-                                    "description_4",
-                                    sep = "/")) %>%
+                                    "description_4"),
+                                    sep = "([/,])") %>%
   select(c(user_id:description_4)) %>%
   pivot_longer(cols = c(description_1: description_4),
                names_to = "description_id",
                values_to = "all_descriptions") %>%
   filter(!is.na(all_descriptions)) %>% #removed all NAs
-  filter(!all_descriptions == "") %>% #removed all empty charachters
-  filter(!all_descriptions < nchar("abc")) %>% #attempted to remove chars shorter than 2.
-  filter(!all_descriptions %in% c(0:10)) %>% #attempted to remove anything that contains any numbers 0-10 
+  filter(nchar(all_descriptions) > 3) %>% #attempted to remove chars shorter than 2.
   group_by(all_descriptions) %>% # group by common words
   summarise(number_of_descriptions = n()) %>% #count how many times each word was used
   arrange(desc(number_of_descriptions)) #arrange by most common word count in descending order
