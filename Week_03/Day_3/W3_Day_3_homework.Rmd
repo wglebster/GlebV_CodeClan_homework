@@ -1,0 +1,104 @@
+---
+title: "Week 3 Day 3 homework"
+output: html_notebook
+---
+```{r}
+#install.packages("rtweet")
+library(rtweet)
+library(tidyverse)
+```
+
+Q1. Load data, check number of rows & columns. List all variable names.
+```{r}
+code_clan_tweets <- read_csv("data/code_clan_tweets.csv") # load data
+dim(code_clan_tweets) #check dimensions - there are 234 rows and 27 columns of data
+names(code_clan_tweets) # list all variable names
+```
+
+Q2. Summarise the number of likes (var = favorite_count). Check for outliers using boxplot.
+```{r}
+num_of_likes <- code_clan_tweets %>%
+  select(tweet_id, text, favorite_count) %>% # select columnds for easier readability
+  arrange(desc(favorite_count)) %>% #arrange in descending order by favorite_count
+  ggplot(aes(x = tweet_id, y = favorite_count)) + # plot tweet_it on horizontal (-) axis and favorite_count on vertival (|) axis
+  geom_boxplot() + 
+  coord_flip() # flip the chart on its side for easier readability
+
+num_of_likes
+```
+
+Q3. Find the total of tweets stored in favorite_count, don't count retweeted (is_quote).
+```{r}
+total_favourites <- code_clan_tweets %>%
+  select(tweet_id, favorite_count, is_quote) %>% # select columns for easier readability
+  filter(is_quote == FALSE, favorite_count !=0) %>% # filter out tweets which were re-quoted and those that were not favorited
+  summarise(total_favourites = n()) # get total number of tweets
+total_favourites
+```
+
+Q4. Get the mean number of retweets (retweet_count), group by source used to send the tweet. Do not count is_quote tweets.
+```{r}
+mean_retweets <- code_clan_tweets %>%
+  select(source, retweet_count, is_quote) %>%
+  filter(is_quote == FALSE) %>%
+  group_by(source) %>%
+  summarise(unique(source), mean_retweets = round(mean(retweet_count), 0)) %>% #use unique() to show each source only once
+  arrange(desc(mean_retweets))
+
+mean_retweets
+
+```
+Q5. Get total of favorite_count, for each media type, arrange by likes descending. Asume that media = text where media type is not listed.
+```{r}
+total_fav_count <- sum(code_clan_tweets$favorite_count)
+total_fav_count
+
+favourite_count_total <- code_clan_tweets %>%
+  select(media_type, favorite_count) %>%
+  mutate(media_type = replace_na(media_type, "text")) %>% #replace NA media_type values with "text"
+  group_by(media_type) %>%
+  summarise(media_type = unique(media_type), total_favourited = sum(favorite_count)) %>%
+  arrange(desc(total_favourited))
+
+favourite_count_total
+```
+
+Q6. Find average number of chars contained in CodeClan tweets.
+```{r}
+mean_char_num <- code_clan_tweets %>%
+  mutate(text, num_chars = str_length(text)) %>%
+  drop_na(num_chars) %>%
+  select(text, num_chars) %>%
+  summarise(average_tweet_length = round(mean(num_chars), 0))
+
+mean_char_num
+```
+Q7. Load CodeClan info file and join on to tweets dataframe
+```{r}
+code_clan_info <- read_csv("data/code_clan_info.csv")
+
+joined_tweets <- code_clan_info %>%
+  left_join(code_clan_tweets, code_clan_info, by = "tweet_id")
+
+joined_tweets
+```
+
+Q8. create codeclan_hashtags that contain only the tweet ID and hashtag in lowercase. keep only tweets with hashtags.
+```{r}
+codeclan_hastags <- joined_tweets %>%
+  select(tweet_id, hashtags, text) %>%
+  drop_na(hashtags) %>%
+  mutate(hashtags = tolower(hashtags))
+
+codeclan_hastags
+```
+
+Q9. Find all instances where values begin with c( inside hashtags.
+```{r}
+c_hashtags <- codeclan_hastags %>%
+  flatten(.,.hashtags) %>%
+  str_detect("c\\(")
+c_hashtags
+```
+
+
