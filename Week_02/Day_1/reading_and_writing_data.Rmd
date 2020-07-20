@@ -99,7 +99,7 @@ A lot of Excel sheets you will encounter will contain more than one sheet. Try t
 
 ```{r}
 #this is code I found on StackOverflow
-#these functions use the library(readxl)
+#these functions use library(readxl)
 read_excel_allsheets <- function(filename, tibble = FALSE) {
 #Tidyverse tibble can be used (the default with read_excel), then should be tibble = TRUE
   sheets <- excel_sheets(filename)
