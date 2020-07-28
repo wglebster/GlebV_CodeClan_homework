@@ -1,0 +1,146 @@
+---
+title: "Selecting the right chart lab (homework)"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(CodeClanData)
+```
+# Task 1 - Comprison
+
+```{r}
+#view(late_deliveries)
+
+ggplot(late_deliveries) + 
+  aes(x = date, y = late_deliveries) +
+  labs(title = "Number of late deliveries by year",
+       x = "Year", 
+       y = "Number of late deliveries") + 
+  geom_point() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#view(recovery_times)
+
+ggplot(recovery_times) +
+  aes(x = treatment_group, y = recovery) +
+  geom_bar(stat = "identity") +
+  facet_grid(~prognosis) +
+  labs(title = "Recovery duration in different treatment groups",
+       subtitle = "Split by prognosis",
+       x = "Treatment groups",
+       y = "Recovery duration (days)") +
+  theme(axis.text.x = element_text(angle = 20))
+
+#view(fitness_levels)
+
+ggplot(fitness_levels) + 
+  aes(x = fitness_score, y = age) +
+  geom_bar(stat = "identity") +
+  labs(title = "Fitness scores of students by age",
+       subtitle = "Split in 5 groups",
+       x = "Fitness score",
+       y = "Student age")+
+  facet_grid(group~.)
+```
+
+# Task 2 - Connection
+```{r}
+#names(blood_pressure)
+
+ggplot(blood_pressure) + 
+  aes(x = daily_saturated_fat_intake_mg, y = systolic_blood_pressure_mm_hg) +
+  geom_point()
+
+names(car_use)
+
+ggplot(car_use) + 
+  aes(x = population, y = car_use_percent) + 
+  geom_point(aes(colour = city)) +
+  geom_line(aes(y = air_so2_concentration_ppm)) +
+  geom_text(aes(label = city), 
+            nudge_x = 0.5, 
+            nudge_y = 0.1) +
+  labs(title = "Car use and SO2 concentration by population",
+       subtitle = "Rising broken line shows SO2 emissions ppm",
+       x = "Population",
+       y = "Percentage of car users") +
+  theme(legend.position = "none")
+```
+
+# Task 3 - Distribution
+```{r}
+#view(d20_outcomes)
+
+ggplot(d20_outcomes) + 
+  aes(x = outcome) +
+  #geom_density()
+  geom_freqpoly(bins = 30) +
+  labs(title = "Frequency of outcomes by count of each outcome") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#view(d20x5_outcomes)
+
+ggplot(d20x5_outcomes) +
+  aes(x = outcome) +
+  geom_density() +
+  #geom_freqpoly(bins = 30)
+  labs(title = "Density of outcomes") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+# Task 4 - Composition
+
+```{r}
+#view(pension_surplus)
+#view(pension_surplus_ordered)
+
+pension_surplus_ordered <- pension_surplus %>%
+  mutate(item_ordered = fct_reorder(item, balance, .desc = TRUE))
+
+ggplot(pension_surplus_ordered) + 
+  aes(x = item_ordered, y = balance) +
+  geom_col() + 
+  coord_flip() + 
+  labs(title = "Pension balance and other transactions from 2016 to 2019",
+       x = "Balance",
+       y = "Transactions") +
+  theme(plot.title = element_text(hjust = 2))
+
+#view(pension_liabilities)
+ggplot(pension_liabilities) +
+  aes(x = liability_type, y = liability_millions) +
+  geom_bar(stat = "identity") +
+  facet_grid(~year) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  #coord_flip()
+  labs(title = "Pension liability types",
+       subtitle = "Split by every three years",
+       x = "Liability type",
+       y = "Liability (millions)") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

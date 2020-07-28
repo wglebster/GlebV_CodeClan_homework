@@ -26,7 +26,7 @@ What is the distribution of the of backpack wights that students carry.
 ```{r}
 ggplot(backpack) + 
   aes(x = backpack_weight) + 
-  geom_histogram(col = "white", binwidth = 1) + 
+  geom_histogram(col = "white", bins = 20) + # changed binwidth = 1 to bins = 20 property.
   labs(title = "Distribution of backpack weights of students",
        x = "Backpack Weight",
        y = "Count of students") +
@@ -36,6 +36,7 @@ ggplot(backpack) +
 ```
 This histogram indicates that majority of students carry backpacks that are 5, 8 and 10 (units of weight) heavy. Quite a lot of students carry backpacks that weigh 11, 14 and 13 (units of weight)
 
+~ updated: Most are howevering between 5-15 backpack weights.
 
 ## Question 3. 
 
@@ -150,8 +151,33 @@ But of those students who did report back poblems, the numbrer of female student
 Create plots to describe the relationship between backpack weight, body weight, gender and reported backpain.
 
 ```{r}
-ggplot(backpack) +
-  geom_bar(aes(x = backpack_weight, y = ))
+##ggplot(backpack) +
+  ##geom_point(aes(x = back_problems, y = backpack_weight, color = sex))
+
+#copied solution from answers:
+backpack <- backpack %>%
+  mutate(backpain_labelled = recode(back_problems, 
+                       "0" = "No", 
+                       "1" = "Yes"))
+# make the labels nice
+pain_labels <- c("backpain: no", "backpain: yes")
+names(pain_labels) <- c("No", "Yes")
+
+sex_labels <- c("sex: female", "sex: male")
+names(sex_labels) <- c("Female", "Male")
+
+
+ggplot(backpack) + 
+  aes(x = body_weight, y = backpack_weight, color = backpain_labelled) + 
+  geom_point() 
+
+ggplot(backpack) + 
+  geom_histogram(aes(x = ratio, fill = backpain_labelled), bins = 20, col = "white") + 
+  facet_grid(sex ~ backpain_labelled, 
+             labeller = labeller(backpain_labelled = pain_labels, sex = sex_labels)) + 
+  labs(x = "\n body weight: backpack weight ratio") +
+      scale_fill_manual(values=c('#f0ca41', '#5022bd'))+
+theme(legend.position = "none")
 ```
 
 
