@@ -1,10 +1,8 @@
 library(shiny)
 library(dplyr)
 library(ggplot2)
+library(CodeClanData)
 
-choices_shapes <- list("Square" = as.integer(15),
-                       "Circle" = as.integer(16),
-                       "Triangle" = as.integer(17))
 # UI section
 
 ui <- fluidPage(
@@ -24,7 +22,9 @@ ui <- fluidPage(
         
         selectInput("shape", 
                     "Shape of Points", 
-                    choices = choices_shapes),
+                    choices = c("Square" = 15,
+                                "Circle" = 16,
+                                "Triangle" = 17)),
         
         textInput("title",
                   "Title of Graph", 
@@ -40,17 +40,15 @@ ui <- fluidPage(
 )
 # Server section
 server <- function(input, output) {
-  
-  
   output$title_out <- renderText({
     input$title
   })
-  output$shape_out <- renderTable({
-    shapes <- as.data.frame(input$shape)
-    ggplot(shapes) + 
-      aes(x = input$shape, y = input$shape[input]) + 
-      geom_point(position = "jitter")
-    
+  
+  output$shape_out <- renderPlot({
+    ggplot(students_big) + 
+      geom_point(aes(x = reaction_time , y = score_in_memory_game),
+                 alpha = input$transparency, color = input$colour_choice, 
+                 shape = as.numeric(input$shape))
   })
 }
 # Run the app
