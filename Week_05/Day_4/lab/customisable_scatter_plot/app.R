@@ -1,7 +1,12 @@
 library(shiny)
 library(dplyr)
 library(ggplot2)
+
+choices_shapes <- list("Square" = as.integer(15),
+                       "Circle" = as.integer(16),
+                       "Triangle" = as.integer(17))
 # UI section
+
 ui <- fluidPage(
     titlePanel("Reaction Time vs. Memory Game"),
     
@@ -19,24 +24,33 @@ ui <- fluidPage(
         
         selectInput("shape", 
                     "Shape of Points", 
-                    choices = list("Square" = as.integer(15),
-                                   "Circle" = as.integer(16),
-                                   "Triangle" = as.integer(17))),
+                    choices = choices_shapes),
+        
         textInput("title",
                   "Title of Graph", 
-                  value = "Enter some Text")
+                  value = "Graph Title")
         ),
+      
       mainPanel(
         textOutput("title_out"),
-        #plotOutput("memory_game")
+        plotOutput("shape_out"),
+        
       )
     )
 )
 # Server section
 server <- function(input, output) {
   
+  
   output$title_out <- renderText({
     input$title
+  })
+  output$shape_out <- renderTable({
+    shapes <- as.data.frame(input$shape)
+    ggplot(shapes) + 
+      aes(x = input$shape, y = input$shape[input]) + 
+      geom_point(position = "jitter")
+    
   })
 }
 # Run the app
