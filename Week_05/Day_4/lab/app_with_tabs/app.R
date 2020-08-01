@@ -17,7 +17,7 @@ ui <- fluidPage(
             selectInput("region_select", 
                         "Region", 
                         choices = sort(unique(students_big$region))
-                        ), #remove students_big later
+                        ), 
             actionButton("update_all",
                          "Generate Plots and Table")
         ),
@@ -42,20 +42,21 @@ ui <- fluidPage(
 server <- function(input, output) {
     filtered_data <- eventReactive(input$update_all, {
         students_big %>%
+            #mutate(region = str_to_title(region)) %>%
             filter(gender <= input$gender_select) %>%
-            filter(region <= (input$region_select))
+            filter(region <= input$region_select)
     })
     
     output$importance_internet_access <- renderPlot({
         ggplot(filtered_data()) + 
             aes(x = importance_internet_access) + 
-            geom_histogram()
+            geom_histogram(binwidth = 30)
     })
     
     output$importance_reducing_pollution <- renderPlot({
         ggplot(filtered_data()) + 
-            aes(importance_reducing_pollution) + 
-            geom_histogram()
+            aes(x = importance_reducing_pollution) + 
+            geom_histogram(binwidth = 30)
     })
  
     output$filtered_table <- renderTable(
