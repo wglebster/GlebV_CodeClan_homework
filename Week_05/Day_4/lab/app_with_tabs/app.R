@@ -42,26 +42,25 @@ ui <- fluidPage(
 server <- function(input, output) {
     filtered_data <- eventReactive(input$update_all, {
         students_big %>%
-            #mutate(region = str_to_title(region)) %>%
-            filter(gender <= input$gender_select) %>%
-            filter(region <= input$region_select)
+            filter(gender == input$gender_select) %>%
+            filter(region == input$region_select)
     })
     
     output$importance_internet_access <- renderPlot({
         ggplot(filtered_data()) + 
             aes(x = importance_internet_access) + 
-            geom_histogram(binwidth = 30)
+            geom_histogram()
     })
     
     output$importance_reducing_pollution <- renderPlot({
         ggplot(filtered_data()) + 
             aes(x = importance_reducing_pollution) + 
-            geom_histogram(binwidth = 30)
+            geom_histogram()
     })
  
-    output$filtered_table <- renderTable(
+    output$filtered_table <- renderTable({
         filtered_data()
-    )
+    })
 }
 # Run the app
 shinyApp(ui = ui, server = server)
