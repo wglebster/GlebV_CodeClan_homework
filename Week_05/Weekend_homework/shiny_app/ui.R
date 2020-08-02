@@ -22,19 +22,11 @@ ui <- fluidPage(
                  selectInput("genre_select",
                   "Select genre", 
                   choices = genre_choice,
-                  #selected = "all"
                   ),
                  selectInput("platform_select",
                   "Select your platform",
                   choices = platform_choice,
-                  #selected = "all"
-                  ),
-                 radioButtons("rating_select",
-                   "Select age rating",
-                   choices = rating_choice,
-                   inline = TRUE, 
-                   #selected = "all"
-                   ),
+                  )
                  #actionButton("update_all",
                  #"Show me my Games!")
     ),
@@ -50,12 +42,8 @@ ui <- fluidPage(
                sidebarPanel(
                  radioButtons("stats_selection",
                              "Choose your stats",
-                             choices = c("Top 10 critic rated", 
-                                         "Top 10 user rated", 
-                                         "Top 10 sales", 
-                                         "Compare all")
+                             choices = c(stats_choice)
                              )
-                 
                ),
                mainPanel(
                  plotOutput("popularity_plot")
