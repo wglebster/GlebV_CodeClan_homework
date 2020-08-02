@@ -46,7 +46,8 @@ ui <- fluidPage(
                              )
                ),
                mainPanel(
-                 plotOutput("popularity_plot")
+                 plotOutput("popularity_plot"),
+                 textOutput("popularity_plot_text")
                )
              )
             )
