@@ -1,12 +1,15 @@
 #server.R
 server <- function(input, output){
-  filtered_data <- reactive( {
+  filtered_data <- reactive({
     game_sales %>%
-      filter(year_of_release == input$year_select) %>%
+      filter(between(year_of_release,
+                     input$year_select[1],
+                     input$year_select[2]
+                     )) %>%
       filter(genre == input$genre_select) %>%
-      filter(platform == input$platform_select) %>%
-      filter(rating == input$rating_select)
-      
+      filter(platform == input$platform_select) #%>%
+    #   filter(rating == input$rating_select)
+  })
     # 
     # if(input$genre_select != "all") {
     #   (filtered_data() %>% 
@@ -21,12 +24,10 @@ server <- function(input, output){
     #   filter(year_of_release == input$year_select)
     # }
     
-    })
+    
     output$filtered_table <- renderDataTable({
       filtered_data() 
-      options = list(searching = FALSE, paging = TRUE)
+      #options = list(searching = FALSE, paging = TRUE)
   })
-    output$popularity_plot <- renderPlot({
-      
-    })
+  
 }

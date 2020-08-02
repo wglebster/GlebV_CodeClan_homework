@@ -43,7 +43,7 @@ ui <- fluidPage(
       dataTableOutput("filtered_table")
     )
       
-      )
+  )
     ),
     tabPanel("Interesting Stats",
              sidebarLayout(
