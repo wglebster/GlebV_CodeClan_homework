@@ -102,7 +102,7 @@ There are 720 posssible outcomes where we roll numbers from 1 to 6 regardless of
 
 # 6. If I draw a single card from a 52-card deck, and it is black, what is the probability that its suit is spades?
 
-52 cards, 2 colours, 4 suites, therefore I have 6.5 chances of drawing a spade.
+52 cards, 2 colours, 4 suites, therefore I have 52/6.5 = 8 chances of drawing a spade.
 
 
 
