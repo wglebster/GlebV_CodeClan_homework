@@ -102,7 +102,15 @@ There are 720 posssible outcomes where we roll numbers from 1 to 6 regardless of
 
 # 6. If I draw a single card from a 52-card deck, and it is black, what is the probability that its suit is spades?
 
-52 cards, 2 colours, 4 suites, therefore I have 52/6.5 = 8 chances of drawing a spade.
+52 cards, 2 colours, 4 suites, since I drew a black card, it can only be either a spade or a club. Thetrefore the odds are 52/2/2 = 13 chances to get a spade. The probability is 13/52 = 0.25. 
+
+```{r}
+suit <- as_tibble(cards(jokers = FALSE)) %>%
+  mutate(colour = ifelse(suit == "Spade" | suit == "Club", "Black", "Red")) %>%
+  filter(colour == "Black") %>% # 26 outcomes
+  filter(suit == "Spade") #13 outcomes
+suit
+```
 
 
 
