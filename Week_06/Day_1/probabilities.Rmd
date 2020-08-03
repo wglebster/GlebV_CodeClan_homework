@@ -1,0 +1,108 @@
+---
+title: "Probabilities_homework"
+author: "Gleb V"
+date: "03/08/2020"
+output: html_notebook
+---
+
+```{r echo=FALSE}
+library(prob)
+library(gtools)
+library(tidyverse)
+options(scipen = 999)
+```
+
+# 1. If I roll a six-sided dice once, what is the probability of getting a number less than 5?
+
+I have a total of 6 outcomes. Therefore a chance or rolling anything less (but not equals) than 5 is 6 - 2 = 4. I can roll 1 or 2 or 3 or 4, all of which are less than 5. 
+
+# 2. How many outcomes are there in the sample space of an experiment in which we toss three dice?
+
+Sample space contains all possible outcomes of the experiment, therefore tossing three dice would produce a sample space of 6 x 6 x 6 = 36
+```{r}
+roll_three_dice <- rolldie(3)
+roll_three_dice
+```
+
+# In an experiment where we roll four dice:
+
+4 dice produces a sample space of 6 x 6 x 6 x 6 = 1296
+```{r}
+roll_four_dice <- rolldie(4)
+roll_four_dice
+```
+
+* how many outcomes are in the event total_equals_5_6_7 (i.e. the total of the four dice equals 5, 6 or 7)? 
+
+There are 4 possible outcomes that result in 5, 10 possible outcomes that result in 6 and 20 outcomes that result in 7, therefore there are 34 possible outcomes. 
+```{r}
+total_equals_5_6_7 <- roll_four_dice %>%
+  mutate(sum_of_rolls = X1 + X2 + X3 + X4) %>%
+  filter(sum_of_rolls == 5 | 
+           sum_of_rolls == 6 | 
+           sum_of_rolls == 7) %>%
+  arrange(sum_of_rolls)
+total_equals_5_6_7
+
+total_equals_5_6_7_summary <- total_equals_5_6_7 %>%
+  group_by(sum_of_rolls) %>%
+  summarise(roll_combinations = n())
+total_equals_5_6_7_summary
+```
+
+* what is the probability of this event?
+
+Probability of the first event `r 4/nrow(roll_four_dice)` + Probability of the second event `r 10/nrow(roll_four_dice)` + Probability of the sum of the third event `r 20/nrow(roll_four_dice)` = `r (4/nrow(roll_four_dice)) + (10/nrow(roll_four_dice)) + (20/nrow(roll_four_dice))`
+
+* what assumptions do we apply in answering part ii? 
+
+Outcomes may not happen in all three events, therefore there is no union of events A & B & C. 
+
+
+# 4. Five chairs are placed in a row in a room, along with five people of differing height. The people sit down randomly on the chairs. What is the probability that they sit in order of decreasing height, left to right?
+
+I'll work out all possible combinations first and count them.
+
+```{r}
+people <- 5
+chairs <- c("A","B", "C", "D", "E")
+
+people_on_chairs <- permutations(n = 5, r = 5, v = chairs, repeats.allowed = FALSE)
+people_on_chairs <- as_tibble(people_on_chairs)
+people_on_chairs
+
+nrow(people_on_chairs)
+
+```
+
+There are a 120 possible combinations. There are two possible outcomes where they will sit in order of height: either A, B, C, D, E or E, D, C, B, A. So the probability of them sitting in order is 2/120 (1/60 = 0.01666667) . These outcomes are either left to right or right to left or right to left, which means that there is only one possible combination 1/120, that satisfies our condition. 
+
+The probability of 5 people sitting on 5 chairs in order by hight left to right is 1/120 = 0.008333333
+
+# 5. I roll six dice:
+
+```{r}
+roll_six_dice <- rolldie(6)
+nrow(roll_six_dice)
+```
+Rolling 6 dice has a sample space of 46656 possible combinations. 
+
+* what is the probability I see the numbers 6, 5, 4, 3, 2 and 1 in order on the dice, left to right?
+
+There is only one otcome that satisfies our conditions, which means the probability is 1/46656 = 0.00002143347 (extremely low)
+
+what is the probability I see one each of the numbers 6, 5, 4, 3, 2 and 1 on the dice regardless of order?
+```{r}
+outcome <- c(6,5,4,3,2,1)
+roll_six_dice_outcome  <- roll_six_dice %>% 
+  filter(isin(., outcome, ordered = FALSE))
+roll_six_dice_outcome  
+```
+There are 720 posssible outcomes where we roll numbers from 1 to 6 regardless of order. Therefore the probability or this happening is 720/46656 = 0.0154321
+
+# 6. If I draw a single card from a 52-card deck, and it is black, what is the probability that its suit is spades?
+
+52 cards, 2 colours, 4 suites, therefore I have 6.5 chances of drawing a spade.
+
+
+
