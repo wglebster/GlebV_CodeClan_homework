@@ -55,6 +55,13 @@ clean_data_set %>%
     col = "black"
   )
 ```
+I understood that a normal distribution can be fitted over any dataset. In case of the mobile phone ratings, I think the model does fit reasonably well inside normal distribution, except for outliers. 
+
+If I am only looking at plots, it looks like reducing number of bins (making bins wider) makes the data look more "normalized" and fit better under the bell shaped normal distribution. 
+
+In terms of the next question - calculating propotions of data 1, 2 or 3 SDs away from the mean, I have absolutely no idea what is what. 
+
+However, I can calculate the mean value and sd and I hope I understand the concept of Standard deviation correctly.
 ```{r}
 # Calculate mean and sd of the ratings
 
