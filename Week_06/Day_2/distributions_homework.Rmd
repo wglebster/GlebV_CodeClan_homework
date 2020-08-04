@@ -1,0 +1,77 @@
+---
+title: "Distributions homework"
+output: html_notebook
+---
+
+```{r}
+library(janitor)
+library(tidyverse)
+```
+```{r}
+data_set <- read_csv("data/20190928-items.csv")
+#View(data_set)
+```
+```{r}
+clean_data_set <- data_set %>%
+  clean_names()
+names(clean_data_set)
+```
+```{r}
+most_phones <- clean_data_set %>%
+  group_by(brand) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+```{r}
+# plot histogram of ratings for Samsung phones.
+clean_data_set %>%
+  filter(brand == "Samsung") %>%
+  ggplot(aes(x = rating)) + 
+  geom_histogram(aes(y = ..density..), col = "white", bins = 30) + 
+  #apply normal distribution overlay
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = mean(clean_data_set$rating),
+      sd = sd(clean_data_set$rating)
+    ),
+    col = "black"
+  )
+  
+```
+
+```{r}
+clean_data_set %>%
+  filter(brand == "Samsung") %>%
+  ggplot(aes(x = rating)) + 
+  geom_histogram(aes(y = ..density..), col = "white", bins = 5) + #reducing the number of bins (e.g. to 5) makes this dataset look more like normal distribution. 
+  #apply normal distribution overlay
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = mean(clean_data_set$rating),
+      sd = sd(clean_data_set$rating)
+    ),
+    col = "black"
+  )
+```
+```{r}
+# Calculate mean and sd of the ratings
+
+stats_of_ratings <- clean_data_set %>%
+  filter(brand == "Samsung") %>%
+  summarise(total_ratings = n(),
+            average_rating = mean(rating),
+            sd = sd(rating))
+stats_of_ratings
+```
+```{r}
+prop_of_ratings <- clean_data_set %>%
+  filter(rating>= stats_of_ratings$average_rating - (stats_of_ratings$sd*2)) %>%
+  filter(rating<= stats_of_ratings$average_rating + (stats_of_ratings$sd*2)) %>%
+  summarise(within_one_sd_prop = stats_of_ratings$total_ratings / n())
+
+prop_of_ratings
+```
+
+
