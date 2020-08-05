@@ -1,0 +1,121 @@
+---
+title: "Confidence Intervals (CI) homework"
+output: html_notebook
+---
+
+```{r eval=FALSE}
+library(tidyverse)
+library(janitor)
+library(infer)
+```
+Load the data again, clean_names(), and re-familiarise yourself with it.
+
+Investigate the distribution of lot_area. Is the distribution roughly normal? If not, what problems do you find?
+```{r}
+ames <- read_csv("data/ames.csv") 
+clean_ames <- ames %>%
+  clean_names()
+names(clean_ames)
+```
+```{r}
+ggplot(clean_ames) +
+  aes(x = lot_area)+ 
+  geom_histogram(aes(y = ..density..), col = "White") + 
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = mean(clean_ames$lot_area),
+      sd = sd(clean_ames$lot_area)
+    )
+  )
+```
+This isn't a normal distribution, the data is very skewed to the right.
+
+Compute and visualise a bootstrap sampling distribution for the mean(lot_area) of the sold houses.
+```{r}
+ames_resample <- clean_ames %>%
+  select("lot_area") %>%
+  rep_sample_n(size = 293, reps = 10000) %>%
+  summarise(average_lot_area = mean(lot_area))
+ames_resample
+
+ci_95 <- ames_resample %>%
+  summarise(#mean = mean(average_lot_area),
+            lower_bound = quantile(average_lot_area, probs = 0.025),
+            upper_bound = quantile(average_lot_area, probs = 0.975))
+ci_95
+
+ggplot(ames_resample) +
+  aes(x = average_lot_area) + 
+  geom_histogram(aes(y = ..density..),col = "white", bins = 30) +
+  stat_function(fun = dnorm,
+                args = list(
+                  mean = mean(ames_resample$average_lot_area),
+                  sd = sd(ames_resample$average_lot_area)
+                  )
+                ) + 
+  shade_confidence_interval(endpoints = ci_95, color = "grey", fill = "lightgrey")
+
+
+```
+Ok, I can infer with 95% confidence that the average lot area of properties sold by Ames is between 9433.81 and	11137.44 (feet squared, numbers are too large to be meters squared).
+
+Then I repeated the same step with stats code. 
+```{r}
+ames_resample2 <- clean_ames %>%
+  select("lot_area") %>%
+  specify(response = lot_area) %>%
+  generate(reps = 10000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+ames_resample2
+
+ames_resample2_95_ci <- ames_resample2 %>%
+  get_ci(level = 0.95, type = "percentile")
+ames_resample2_95_ci
+```
+Use your bootstrap distribution to calculate a 95% CI for mean(lot_area), and visualise it on the distribution.
+```{r}
+ames_resample2 %>%
+  visualise() +
+  shade_confidence_interval(endpoints = ames_resample2_95_ci, fill = "grey", color = "grey")
+
+```
+You would like to know the mean(lot_area) of the sold houses with higher confidence. Calculate the 99% CI for this variable (you can re-use your bootstrap distribution from above). Is it narrower or broader than the 95% CI? Does that make sense?
+```{r}
+ames_resample2_99_ci <- ames_resample2 %>%
+  get_ci(level = 0.99, type = "percentile")
+ames_resample2_99_ci
+```
+With 99% CI we get a broader range of lot areas, however it's not a huge difference. I personally expected a broader range before I ran the test.
+
+
+Calculate the point estimate of the mean(lot_area)
+```{r}
+point_estimate <- ames_resample %>%
+  summarise(mean = mean(average_lot_area),
+            lower_bound = quantile(average_lot_area, probs = 0.025),
+            upper_bound = quantile(average_lot_area, probs = 0.975))
+point_estimate
+```
+
+
+Calculate a point estimate and 95% CI for the proportion of houses in the data built before 1920. Does the number of reps you use matter? [Investigate reps from 200 up to 50000, memory of your laptop permitting].
+```{r}
+houses_before_1920_200 <- clean_ames %>%
+  mutate(before_1920 = as.numeric(year_built < 1920)) %>%
+  specify(response = year_built) %>%
+  generate(reps = 200, type = "bootstrap") %>%
+  calculate(stat = "mean") %>%
+  get_ci(level = 0.95, type = "percentile")
+
+
+houses_before_1920_50000 <- clean_ames %>%
+  mutate(before_1920 = as.numeric(year_built < 1920)) %>%
+  specify(response = year_built) %>%
+  generate(reps = 50000, type = "bootstrap") %>%
+  calculate(stat = "mean") %>%
+  get_ci(level = 0.95, type = "percentile")
+houses_before_1920_50000
+houses_before_1920_200
+```
+The difference between smaller and larger sample is quite negligeble. So much so that I possibly could conclude that there is little reason in wasting computsational power and time to achieve such a small difference in our oucomes. 

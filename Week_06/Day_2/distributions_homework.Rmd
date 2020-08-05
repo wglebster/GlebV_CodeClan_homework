@@ -65,7 +65,7 @@ However, I can calculate the mean value and sd and I hope I understand the conce
 ```{r}
 # Calculate mean and sd of the ratings
 
-stats_of_ratings <- clean_data_set %>%
+stats_of_ratings <- data_set %>%
   filter(brand == "Samsung") %>%
   summarise(total_ratings = n(),
             average_rating = mean(rating),
@@ -73,12 +73,26 @@ stats_of_ratings <- clean_data_set %>%
 stats_of_ratings
 ```
 ```{r}
-prop_of_ratings <- clean_data_set %>%
-  filter(rating>= stats_of_ratings$average_rating - (stats_of_ratings$sd*2)) %>%
-  filter(rating<= stats_of_ratings$average_rating + (stats_of_ratings$sd*2)) %>%
-  summarise(within_one_sd_prop = stats_of_ratings$total_ratings / n())
+#1 sd
+prop_of_ratings_1sd <- data_set %>%
+  filter(rating>= stats_of_ratings$average_rating - stats_of_ratings$sd) %>%
+  filter(rating<= stats_of_ratings$average_rating + stats_of_ratings$sd) %>%
+  summarise(within_one_sd_prop = n() / nrow(clean_data_set))
+prop_of_ratings_1sd
 
-prop_of_ratings
+#2 sd
+prop_of_ratings_2sd <- data_set %>%
+  filter(rating >= stats_of_ratings$average_rating - (2 * stats_of_ratings$sd)) %>%
+  filter(rating <= stats_of_ratings$average_rating + (2 * stats_of_ratings$sd)) %>%  
+  summarise(within_two_sd_prop = n() / nrow(clean_data_set))
+prop_of_ratings_2sd
+
+# 3 sd
+prop_of_ratings_3sd <- data_set %>%
+  filter(rating >= stats_of_ratings$average_rating - (3 * stats_of_ratings$sd)) %>%
+  filter(rating <= stats_of_ratings$average_rating + (3 * stats_of_ratings$sd)) %>%  
+  summarise(within_two_sd_prop = n() / nrow(clean_data_set))
+prop_of_ratings_3sd
 ```
 
 
