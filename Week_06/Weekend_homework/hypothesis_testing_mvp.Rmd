@@ -1,0 +1,201 @@
+---
+title: "Hypothesis testing homework MVP"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+data(msleep)
+```
+```{r}
+msleep <- msleep
+```
+```{r}
+View(msleep)
+names(msleep)
+dim(msleep)
+```
+Jabberwockies sleep for around 7 hours a night, on average. Perform an appropriate statistical test to determine whether the mean sleep_total in the sampled population of animal types differs from the typical value for Jabberwockies.
+
+
+H0: msleep sample average == 7 hours per night
+Ha: msleep sample average != 7 hours per night
+significance level = 5%
+
+```{r}
+#visualise data on histogram and boxplot
+ggplot(msleep) +
+  aes(x = sleep_total) + 
+  geom_histogram(col = "white", bins = 30)
+
+ggplot(msleep) +
+  aes(x = sleep_total) + 
+  geom_boxplot()
+
+#calculate sample observed stat (average sleep per night).
+observed_stat <- msleep %>%
+  summarise(avg_total_sleep = mean(sleep_total))
+observed_stat
+```
+
+Since our sample contains 83 readings, it is sufficiently large to allow us to reject the H0 as there is sufficient evidence that the average sleep per night of our sample is over 10 hours, which is more than 7 hours. 
+
+However we want to proove that the difference is statisticaaly significant. So we will carry out further hypothesis tests. 
+
+```{r}
+# calculate null hypothesis distribution
+
+null_distribution <- msleep %>%
+  specify(response = sleep_total) %>%
+  hypothesise(null = "point", mu = 7) %>%
+  generate(reps = 10000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+null_distribution
+```
+```{r}
+#visualize null distribution
+
+null_distribution %>%
+  visualise() + 
+  shade_p_value(obs_stat = observed_stat$avg_total_sleep, direction = "both")
+```
+Looking at this graph, we can reject the H0 = 7 hours. 
+
+```{r}
+# calculate p value
+
+p_value <- null_distribution %>%
+  get_p_value(obs_stat = observed_stat$avg_total_sleep, direction = "both")
+p_value
+```
+I can quite certainly reject the H0, as there is sufficient evidence that the average total sleep of our sample is statistically significantly different from that of Jabberwockies.
+
+
+
+* Perform an appropriate statistical test to determine whether omnivores sleep for significantly longer than herbivores, on average.
+
+significance level = 0.05
+H0: omnivores_sleep - herbivores_sleep = 0
+Ha: omnivores_sleep - herbivores_sleep > 0
+
+```{r}
+vores_sleep <- msleep %>%
+  filter(vore == "herbi" | vore == "omni") %>%
+  group_by(vore) %>%
+  summarise(sleep_total)
+vores_sleep
+```
+```{r}
+vores_sleep %>%
+  ggplot(aes(x = vore, y = sleep_total)) +
+  geom_boxplot()
+```
+```{r}
+sleep_null_distribution <- vores_sleep %>%
+  specify(sleep_total ~ vore) %>%
+  hypothesise(null = "independence") %>%
+  generate(reps = 5000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("herbi", "omni"))
+head(sleep_null_distribution)
+```
+```{r}
+sleep_observer_stat <- vores_sleep %>%
+  specify(sleep_total ~ vore) %>%
+  calculate(stat = "diff in means", order = c("herbi", "omni"))
+sleep_observer_stat
+```
+```{r}
+sleep_null_distribution %>%
+  visualise() + 
+  shade_p_value(obs_stat = sleep_observer_stat, direction = "right")
+```
+```{r}
+sleep_p_value <- sleep_null_distribution %>%
+  get_p_value(obs_stat = sleep_observer_stat, direction = "right")
+sleep_p_value
+```
+* There is significant statistical evidence to reject our H0, as comparative p value of herbivore and omnivore sleep is larger than 5%.
+
+
+Perform an appropriate statistical test to determine whether the proportion of domesticated animal types in the population of animal types is greater than 5%.
+
+significance level = 0.05
+H0: prop_domesticated = prop_non_domesticated or difference == 0
+Ha: prop_domesticated > prop_non_domesticated or difference > 5%
+
+Where conservation == NA, I made assumtion that is_domesticated == FALSE, as the the status would be unknown due to difficulties in recording the status. 
+
+```{r}
+domesticated_animals <- msleep %>%
+  mutate(is_domesticated = ifelse(!is.na(conservation) & conservation != "domesticated", FALSE, TRUE))
+domesticated_animals
+```
+```{r}
+ggplot(domesticated_animals, aes(x = is_domesticated, fill = is_domesticated)) +
+  geom_bar(position = "dodge")
+```
+```{r}
+dom_a_obsserved_stat <- domesticated_animals
+ 
+```
+```{r}
+dom_a_obsserved_stat_null_distribution <- domesticated_animals %>%
+  
+```
+
+# Hypothesis testing - interpretation
+
+1. You work for a independent coffee shop. You’ve performed a small survey in the local town and found that 40% of the people you randomly asked were aware of your shop in the town. You then conduct a marketing campaign by flyering local venues and targeting advertisements on social media. Finally you conduct a second small random survey in the town, asking if people are aware of your coffee shop. You want to test the hypothesis that the campaign has significantly increased awareness of the shop.
+
+* I would define 
+
+H0: shop_awareness = 40%, assuming that ad campaign made no difference. 
+
+Ha > 40%, to test if awareness has increased. 
+
+I wouls set my significance level at 5%. 
+
+I use bootstrap. 
+
+------------------
+
+2. You work for a website design company and have performed an A/B test on the position of a banner on a website page promoting a particular item.
+In the current test, the first group continues to be shown the banner at the right hand side of the webpage (its usual position) while the test group is shown it at the top of the page. The performance metric we will be testing is click through rate (CTR) on the banner, i.e. what proportion of users click on the banner. 
+
+* Here I need to compare difference in mean CTR from two datasets.
+
+significance level: 1%
+H0: CTR1 - CTR2 == 0
+Ha: CTR1 - CTR2 > 5
+
+I use simulate to generate null distribution.
+
+--------
+
+3. You work as an analyst for a car manufacturing company - they have specific standards they must meet for standards and regulation purposes. You have been asked to check the quality control of the manufacture of a particular car part. The part must have a width of 145mm, with a small (given) level of tolerance. You have been given data on a sample of 1,000 parts produced over the period of a week.
+
+I assume the question is to define parameters of Quality Control of the sample of 1000 parts. 
+
+H0: width == 145
+Ha: width != 145
+significance level: 5%
+
+null_distribution by bootstrapping
+
+# Interpreting the results
+
+* Coffee shop problem. Significance level: 0.05, calculated p-value: 0.07 
+
+As the p-value is 0.07 is larger than our significance level, we fail to reject H0, as based on the sample, we do not have sufficient statistical evidence that the mean is significantly different (greater) than the null value
+
+* Website company problem. Significance level: 0.01, p-value: 0.006 
+
+As the p-value 0.006 is less than our significance level of 0.01, we reject H0. As we found sufficient statistical evidence that CTR2 is statistically greater than CTR1.
+
+* Manufacturing company problem. Significance level: 0.05, p-value: 0.55
+
+We fail to reject H0, because there is no sufficient statistical evidence that Ha is significantly statistically different from H0. 
+
+
+
+
