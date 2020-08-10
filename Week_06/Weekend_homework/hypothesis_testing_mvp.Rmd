@@ -95,13 +95,13 @@ sleep_null_distribution <- vores_sleep %>%
   specify(sleep_total ~ vore) %>%
   hypothesise(null = "independence") %>%
   generate(reps = 5000, type = "permute") %>%
-  calculate(stat = "diff in means", order = c("herbi", "omni"))
+  calculate(stat = "diff in means", order = c("omni", "herbi"))
 head(sleep_null_distribution)
 ```
 ```{r}
 sleep_observer_stat <- vores_sleep %>%
   specify(sleep_total ~ vore) %>%
-  calculate(stat = "diff in means", order = c("herbi", "omni"))
+  calculate(stat = "diff in means", order = c("omni", "herbi"))
 sleep_observer_stat
 ```
 ```{r}
@@ -127,7 +127,7 @@ Where conservation == NA, I made assumtion that is_domesticated == FALSE, as the
 
 ```{r}
 domesticated_animals <- msleep %>%
-  mutate(is_domesticated = ifelse(!is.na(conservation) & conservation != "domesticated", FALSE, TRUE))
+  mutate(is_domesticated = ifelse(conservation != "domesticated", FALSE, TRUE))
 domesticated_animals
 ```
 ```{r}
