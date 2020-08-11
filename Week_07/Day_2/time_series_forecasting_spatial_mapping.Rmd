@@ -1,0 +1,212 @@
+---
+title: "Time series forecasting & Spatial data mapping homework"
+output: html_notebook
+---
+```{r eval=FALSE}
+library(tidyverse)
+library(lubridate)
+library(tsibble)
+library(tsibbledata)
+library(fable)
+```
+# Q1. 
+
+Load in the nyc_bikes data from the tsibbledata package. Have an initial look at it to see what you’re working with. Create three new columns: one that stores only the year the bike was used, one that stores only the month the bike was used, and one that stores the date. Use the data stored in start_time to create these new columns.
+
+```{r}
+View(nyc_bikes)
+```
+```{r}
+nyc_bikes_extra_cols <- nyc_bikes %>%
+  mutate(year = year(start_time),
+         month = month(start_time, label = TRUE),
+         day = day(start_time)
+  )
+```
+# Q2.
+
+Summarise the number of bike hire counts by month. Make a plot of this data. 
+
+```{r}
+
+bike_hire_by_month <- nyc_bikes_extra_cols %>%
+  index_by(month = ~ month(., label = TRUE)) %>%
+  summarise(hire_count = n())
+
+ggplot(bike_hire_by_month) +
+  aes(x = month, y = hire_count) +
+  geom_line(group = 1) +
+  geom_point() + 
+  labs(y = "Number of bikes hired",
+       x = "Month",
+       title = "Number of bikes hired in NYC every month")
+```
+
+# Q3. 
+
+Now Summarise the number of bike hire counts by date. Make a plot of this new aggregated data. What does this plot tell you about the time series? Would this data be preferrable for time series forecasting compared to the monthly data?
+
+```{r}
+nyc_bikes_date_summary <- nyc_bikes_extra_cols %>% 
+  index_by(day) %>%
+  summarise(bike_hire_counts = n())
+
+nyc_bikes_date_summary
+
+nyc_bikes_filled <- nyc_bikes_date_summary %>%
+  fill_gaps(bike_hire_counts = as.integer(median(bike_hire_counts)))
+
+ggplot(bike_hire_by_day) +
+  aes(x = day_of_week, y = hire_count) +
+  geom_line() +
+  labs(y = "Number of bikes hired",
+       x = "Date",
+       title = "NYC bike hires by Date") +
+  scale_color_brewer(palette = "Paired")
+
+##########################################
+##########################################
+
+bike_hire_by_month_day <- nyc_bikes_extra_cols %>%
+  group_by(year, month) %>%
+  index_by(day_of_week = ~ day(.)) %>%
+  summarise(hire_count = n())
+
+ggplot(bike_hire_by_month_day) +
+  aes(x = day_of_week, y = hire_count, fill = month, colour = month) +
+  geom_line() +
+  labs(y = "Number of bikes hired",
+       x = "Date",
+       title = "NYC bike hires by Date") +
+  scale_color_brewer(palette = "Paired") +
+  facet_wrap(~ month, dir = "v")
+```
+Having the data aggregated just by date may be helpful if we were looking at how the number of bike hires changes depending on the day of week. 
+For example there usually seems to be a dip in number of hires at the end of the month, but we could also look what day of the week has usually the lowest number of hires. 
+Daily and monthly data can be both useful depending on our requirements. 
+
+# Q4. 
+
+Model.
+
+```{r}
+bike_hire_model <- nyc_bikes_date_summary %>%
+  model(
+    snaive_rw_model = SNAIVE(bike_hire_counts),
+    mean_model = MEAN(bike_hire_counts),
+    arima_model = ARIMA(bike_hire_counts)
+  )
+
+bike_hire_model
+```
+# Q5. 
+
+Plot your models alongside your data.
+
+```{r}
+bike_hire_model_forecast <- bike_hire_model %>%
+  forecast(h = 73)
+
+bike_hire_model_forecast %>%
+  autoplot(nyc_bikes_date_summary, level = NULL)
+```
+# Q6: 
+
+Test your model accuracy : choose a training data set from your main dataset, build a forecast on the training set, and then plot the training set forecast against the real data. Calculate model accuracy.
+
+```{r}
+bike_hire_training <- nyc_bikes_date_summary
+```
+```{r}
+fit_training <- bike_hire_training %>%
+  model(
+    #snaive_rw_model = SNAIVE(bike_hire_counts), ERROR: 1 error encountered for snaive_rw_model
+    #[1] Non-seasonal model specification provided, use RW() or provide a different lag             #specification.
+    mean_model = MEAN(bike_hire_counts),
+    arima_model = ARIMA(bike_hire_counts)
+  )
+```
+```{r}
+forecast_training <- fit_training %>%
+  forecast(h = 73)
+
+forecast_training %>%
+  autoplot(bike_hire_training) + 
+  autolayer(filter_index(nyc_bikes_date_summary, "20" ~ . ))
+
+model_accuracy <- accuracy(forecast_training, nyc_bikes_date_summary)
+
+model_accuracy %>%
+  arrange(RMSE)
+```
+# Q7.
+
+
+Not sure, as it clearly went wrong somewhere...
+
+If this is how it was supposed to come out, then no, this isn't a good model for our data. 
+
+I could probably use same models if I had more data, or I could try different model.
+
+
+# Q8. 
+
+Make a simple ggplot (geom_point) which plots the start longitude and latitudes of each bike. Create a separate facet for each bike_id. Colour the dots in by month of use. What does this tell you about what month each bike was used most in?
+
+Do the same for the end longitude and latitude.
+
+```{r}
+library(sf)
+```
+```{r}
+ggplot(nyc_bikes_extra_cols) + 
+  aes(x = start_lat, y = start_long, colour = month) +
+  geom_point() +
+  facet_wrap(~ bike_id) +
+  labs(title = "Hire Start")
+
+ggplot(nyc_bikes_extra_cols) + 
+  aes(x = end_lat, y = end_long, colour = month) +
+  geom_point() +
+  facet_wrap(~ bike_id) + 
+  labs(title = "Hire End")
+```
+
+# Q9. 
+
+Create an interactive leaflet plot which plots the start points of the city bikes. Ensure it has at least markers to denote start points (taken from the nyc_bikes_spatial data). Feel free to add any additional features you wish.
+
+```{r eval=FALSE}
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(rgeos)
+```
+```{r}
+world <- ne_countries() 
+
+city_NY <- world %>%
+  filter(city == "New York")
+
+ggplot(city_NY) +
+  geom_sf()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

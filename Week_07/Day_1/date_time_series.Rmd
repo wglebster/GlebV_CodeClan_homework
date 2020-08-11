@@ -160,12 +160,6 @@ weather_data_y_m_agg %>%
        x = "day",
        y = "temperature") +
   facet_grid(origin ~ .)
-
-#facet wrap it by origin
-
-# weather_data_y_m_agg %>%
-#   filter(origin %in% c("EWR", "JFK", "LGA")) %>%
-#   gg_subseries(temp_mean)
 ```
 
 
