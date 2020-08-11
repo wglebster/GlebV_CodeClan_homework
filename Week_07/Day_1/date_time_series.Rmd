@@ -111,6 +111,8 @@ weather_data_y_m <- weather_data %>%
   geom_line()
 weather_data_y_m
 
+head(weather_data_y_m)
+
 ```
 Plotting all datapoints for all three airports on the same graph makes little sense, as the lines overlap, which makes te chart hard to read. Two possible solutions - either split it into three charts, displaying data from one airport on aech chart. However better solution is to use fewer datapoints. 
 ```{r}
@@ -146,17 +148,21 @@ ggplot(weather_rolling) +
 Downsample your data so that you plot daily temperature data for each airport, instead of hourly data.
 
 ```{r}
-unique(weather_data$origin)
-
 weather_data_y_m_agg <- weather_data_y_m %>%
-  filter(origin == "JFK") %>%
+  group_by(origin) %>%
   index_by(date = ~yday(.)) %>%
-  summarise(temp_mean = mean(temp, na.rm = TRUE))
+  summarise( temp_mean = mean(temp, na.rm = TRUE))
 weather_data_y_m_agg
 
-ggplot(weather_data_y_m_agg) +
-  aes(x = date, y = temp_mean) + 
-  geom_line(group = 1)
+weather_data_y_m_agg %>%
+  autoplot(temp_mean) +
+  labs(title = "Daily mean temperature data in three NYC airports",
+       x = "day",
+       y = "temperature")
+
+# weather_data_y_m_agg %>%
+#   filter(origin %in% c("EWR", "JFK", "LGA")) %>%
+#   gg_subseries(temp_mean)
 ```
 
 
