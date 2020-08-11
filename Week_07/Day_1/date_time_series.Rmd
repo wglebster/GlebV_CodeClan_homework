@@ -135,7 +135,7 @@ Choose an appropriate rolling window and calculate a moving average for your wea
 weather_rolling <- weather_data %>%
   mutate(temp_ma = slide_dbl(temp, 
                               ~ mean(., na.rm = TRUE),
-                              .size = 1000)
+                              .size = 740)
          )
 weather_rolling
 ggplot(weather_rolling) +
@@ -150,15 +150,18 @@ Downsample your data so that you plot daily temperature data for each airport, i
 ```{r}
 weather_data_y_m_agg <- weather_data_y_m %>%
   group_by(origin) %>%
-  index_by(date = ~yday(.)) %>%
-  summarise( temp_mean = mean(temp, na.rm = TRUE))
+  index_by(day = ~yday(.)) %>%
+  summarise(temp_mean = mean(temp, na.rm = TRUE))
 weather_data_y_m_agg
 
 weather_data_y_m_agg %>%
   autoplot(temp_mean) +
   labs(title = "Daily mean temperature data in three NYC airports",
        x = "day",
-       y = "temperature")
+       y = "temperature") +
+  facet_grid(origin ~ .)
+
+#facet wrap it by origin
 
 # weather_data_y_m_agg %>%
 #   filter(origin %in% c("EWR", "JFK", "LGA")) %>%
