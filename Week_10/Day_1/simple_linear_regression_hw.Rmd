@@ -1,0 +1,61 @@
+---
+title: "Simple linear regression homework"
+author: "Gleb V"
+output: html_notebook
+---
+```{r}
+#import libraries
+library(tidyverse)
+library(janitor)
+library(modelr)
+library(broom)
+library(ggfortify)
+```
+Load the data into a dataframe project
+
+```{r}
+#load and preview data
+project <- read_csv("data/project_management.csv")
+View(project)
+```
+
+Plot the data, taking estimated_length as the independent variable and actual_length as the dependent variable.
+
+```{r}
+#plot explanatory variable x = actual_length, outcome variable y = estimated_length
+project %>%
+  ggplot(aes(x = actual_length, y = estimated_length))+
+  geom_point(size = 1)+
+  geom_text(aes(label = 1:nrow(project)))+ 
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+Regress actual_length on estimated_length and confirm your visual assessment of which points are ‘influential’ or ‘non-influential’ outliers based on Cook’s distance. 
+
+```{r}
+proj_model = lm(actual_length~estimated_length, data = project)
+proj_model
+autoplot(proj_model)
+```
+
+Obtain the intercept and regression coefficient of variable estimated_length for a simple linear model fitted to data omitting one of your non-influential outlier points.
+
+```{r}
+project_outlier <- project %>%
+  filter(actual_length < 30)
+
+project_outlier_model <- lm(actual_length~estimated_length, data = project_outlier)
+autoplot(project_outlier_model)
+
+```
+
+How different are the intercept and coefficient from those obtained above by fitting the full data set? Does this support classifying the omitted point as non-influential? 
+
+Intercept is significntly different, as well as the estimated_length variable. 
+
+The outlier skewes our model, whether we should remove it or not is a question of what we want our model to do. If we dont need the model to address any outliers, then we can remove them, if we need the model to address outliers to an extent, we could try bootstrapping the regrssion (dataset)
+
+Looking at Residuals vs Fitted, Normal Q-Q and Scale-Location diagnostic plots after removing biggest outlier, it seems that our model fits reasonably well.
+
+
+
