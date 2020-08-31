@@ -105,7 +105,7 @@ Plot your models alongside your data.
 
 ```{r}
 bike_hire_model_forecast <- bike_hire_model %>%
-  forecast(h = 73)
+  forecast(h = 292)
 
 bike_hire_model_forecast %>%
   autoplot(nyc_bikes_date_summary, level = NULL)
@@ -132,7 +132,7 @@ forecast_training <- fit_training %>%
 
 forecast_training %>%
   autoplot(bike_hire_training) + 
-  autolayer(filter_index(nyc_bikes_date_summary, "20" ~ . ))
+  autolayer(filter_index(nyc_bikes_date_summary, "20" ~ ., colour = "black" ))
 
 model_accuracy <- accuracy(forecast_training, nyc_bikes_date_summary)
 
