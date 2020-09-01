@@ -1,0 +1,128 @@
+---
+title: "Diamonds Model homework"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+```
+
+1. Load the diamonds.csv data set and undertake an initial exploration of the data. 
+
+```{r}
+diamonds <- read_csv("data/diamonds.csv")
+summary(diamonds)
+head(diamonds)
+```
+```{r}
+diamonds <- diamonds %>%
+  rename(length_mm = x,
+         width_mm = y,
+         depth_mm = z)
+head(diamonds)
+#View(diamonds)
+```
+
+2. We expect the carat of the diamonds to be strong correlated with the physical dimensions x, y and z. Use ggpairs() to investigate correlations between these four variables.
+
+```{r}
+library(GGally)
+ggpairs(diamonds)
+```
+```{r}
+test_model <- lm(price ~ length_mm + width_mm + depth_mm, data = diamonds)
+summary(test_model)
+```
+
+So, we do find significant correlations. Let’s drop columns x, y and z from the dataset, in preparation to use only carat going forward.
+
+```{r}
+diamonds_trim <- diamonds %>%
+  select(-c("X1", "length_mm", "width_mm", "depth_mm"))
+head(diamonds_trim)
+```
+
+4. We are interested in developing a regression model for the price of a diamond in terms of the possible predictor variables in the dataset.
+
+```{r}
+library(ggfortify)
+test_model2 <- lm(price ~ carat, data = diamonds_trim)
+autoplot(test_model2)
+summary(test_model2)
+```
+```{r}
+ggpairs(diamonds_trim)
+```
+
+```{r}
+diamonds_trim %>%
+  ggplot(aes(x = price, y = cut))+
+  geom_boxplot()
+```
+```{r}
+diamonds_trim %>%
+  ggplot(aes(x = price, y = color))+
+  geom_boxplot()
+```
+```{r}
+diamonds_trim %>%
+  ggplot(aes(x = price, y = clarity))+
+  geom_boxplot()
+```
+
+5. Shortly we may try a regression fit using one or more of the categorical predictors cut, clarity and color, so let’s investigate these predictors
+
+```{r}
+library(fastDummies)
+
+diamonds_dummy <- diamonds_trim %>%
+  dummy_cols(select_columns = c("cut", "clarity", "color"),
+                                remove_first_dummy = TRUE,
+                                remove_selected_columns = FALSE)
+
+#View(diamonds_dummy)
+```
+
+There are 4 categories of "cut", 7 cats of "clarity" and 6 cats of "color"
+
+
+
+6 i. First, we’ll start with simple linear regression. Regress price on carat and check the regression diagnostics.
+
+```{r}
+diamonds_dummy %>%
+  ggplot(aes(x = price, y = carat))+
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+```
+```{r}
+price_carat_model <- lm(price ~ carat, data = diamonds_dummy)
+summary(price_carat_model)
+autoplot(price_carat_model)
+```
+
+Run a regression with one or both of the predictor and response variables log() transformed and recheck the diagnostics. Do you see any improvement?
+
+```{r}
+diamonds_transformed <- diamonds_dummy %>%
+  transform(price,carat, method = "log")
+View(diamonds_transformed)
+```
+```{r}
+diamonds_transformed_model <- lm(price ~ carat, data = diamonds_transformed)
+summary(diamonds_transformed_model)
+autoplot(diamonds_transformed_model)
+```
+
+I cannot see any improvement, standard error is still very high, R-square and p-values are the same.
+
+
+Let’s use log() transformations of both predictor and response. Next, experiment with adding a single categorical predictor into the model. Which categorical predictor is best? [Hint - investigate r2 values]
+```{r}
+diamonds_transformed_model2 <- lm(price ~ carat:clarity, data = diamonds_transformed)
+summary(diamonds_transformed_model2)
+```
+
+price ~ carat:clarity provides r-square closest to 1, I think carat:clarity might be the most statistically significant predictor of the price.
+
+
+

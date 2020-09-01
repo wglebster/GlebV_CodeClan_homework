@@ -27,19 +27,23 @@ Plot the data, taking estimated_length as the independent variable and actual_le
 project %>%
   ggplot(aes(x = estimated_length, y = actual_length))+
   geom_point(size = 1)+
-  geom_text(aes(label = 1:nrow(project)))+ 
+  geom_text(aes(label = 1:nrow(project)), nudge_x = 0.2, nudge_y = 1)+ 
   geom_smooth(method = "lm", se = FALSE)
 ```
 
 Regress actual_length on estimated_length and confirm your visual assessment of which points are ‘influential’ or ‘non-influential’ outliers based on Cook’s distance. 
 
 ```{r}
-proj_model = lm(estimated_length ~ actual_length, data = project)
+proj_model = lm(actual_length ~ estimated_length, data = project)
 proj_model
 autoplot(proj_model)
 ```
 ```{r}
 options(scipen = 999)
+g_proj_model <- clean_names(glance(proj_model))
+t_proj_model <- clean_names(tidy(proj_model))
+g_proj_model
+t_proj_model
 ```
 
 Obtain the intercept and regression coefficient of variable estimated_length for a simple linear model fitted to data omitting one of your non-influential outlier points.
@@ -52,6 +56,12 @@ project_outlier_model <- lm(estimated_length~actual_length, data = project_outli
 autoplot(project_outlier_model)
 
 ```
+```{r}
+g_proj_outlier_model <- clean_names(glance(project_outlier_model))
+t_proj_outlier_model <- clean_names(tidy(project_outlier_model))
+g_proj_outlier_model
+t_proj_outlier_model
+```
 
 How different are the intercept and coefficient from those obtained above by fitting the full data set? Does this support classifying the omitted point as non-influential? 
 
@@ -60,6 +70,5 @@ Intercept is significntly different, as well as the estimated_length variable.
 The outlier skewes our model, whether we should remove it or not is a question of what we want our model to do. If we dont need the model to address any outliers, then we can remove them, if we need the model to address outliers to an extent, we could try bootstrapping the regrssion (dataset)
 
 Looking at Residuals vs Fitted, Normal Q-Q and Scale-Location diagnostic plots after removing biggest outlier, it seems that our model fits reasonably well.
-
 
 
