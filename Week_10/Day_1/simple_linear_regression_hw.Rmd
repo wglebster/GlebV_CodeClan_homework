@@ -34,9 +34,12 @@ project %>%
 Regress actual_length on estimated_length and confirm your visual assessment of which points are ‘influential’ or ‘non-influential’ outliers based on Cook’s distance. 
 
 ```{r}
-proj_model = lm(estimated_length~actual_length, data = project)
+proj_model = lm(estimated_length ~ actual_length, data = project)
 proj_model
 autoplot(proj_model)
+```
+```{r}
+options(scipen = 999)
 ```
 
 Obtain the intercept and regression coefficient of variable estimated_length for a simple linear model fitted to data omitting one of your non-influential outlier points.
@@ -45,7 +48,7 @@ Obtain the intercept and regression coefficient of variable estimated_length for
 project_outlier <- project %>%
   filter(actual_length < 30)
 
-project_outlier_model <- lm(actual_length~estimated_length, data = project_outlier)
+project_outlier_model <- lm(estimated_length~actual_length, data = project_outlier)
 autoplot(project_outlier_model)
 
 ```
