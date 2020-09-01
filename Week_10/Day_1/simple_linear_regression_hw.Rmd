@@ -22,9 +22,10 @@ View(project)
 Plot the data, taking estimated_length as the independent variable and actual_length as the dependent variable.
 
 ```{r}
-#plot explanatory variable x = actual_length, outcome variable y = estimated_length
+#plot explanatory variable x = estimated_length, outcome variable y = actual_length
+
 project %>%
-  ggplot(aes(x = actual_length, y = estimated_length))+
+  ggplot(aes(x = estimated_length, y = actual_length))+
   geom_point(size = 1)+
   geom_text(aes(label = 1:nrow(project)))+ 
   geom_smooth(method = "lm", se = FALSE)
@@ -33,7 +34,7 @@ project %>%
 Regress actual_length on estimated_length and confirm your visual assessment of which points are ‘influential’ or ‘non-influential’ outliers based on Cook’s distance. 
 
 ```{r}
-proj_model = lm(actual_length~estimated_length, data = project)
+proj_model = lm(estimated_length~actual_length, data = project)
 proj_model
 autoplot(proj_model)
 ```
