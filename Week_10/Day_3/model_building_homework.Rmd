@@ -1,0 +1,250 @@
+---
+title: "Model building homework"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+house_data <- read_csv("data/kc_house_data.csv")
+glimpse(house_data)
+summary(house_data)
+```
+
+You might like to think about removing some or all of date, id, sqft_living15, sqft_lot15 and zipcode (lat and long provide a better measure of location in any event).
+
+```{r}
+house_data_tidy <- house_data %>%
+  mutate(waterfront = ifelse(waterfront == 1, TRUE, FALSE),
+         renovated = ifelse(yr_renovated == 0, FALSE, TRUE)) %>%
+  select(-c(id, date, sqft_living15, sqft_lot15, yr_renovated))
+glimpse(house_data_tidy)
+```
+
+* I kept zipcode, because it is likely to provide easier overview of how the price varies based on location in the city. I changed waterfront to logical and yr_renovated to logical renovated. 
+
+condition is a categorical variable on a scale 1 - 5. 
+```{r}
+sort(unique(house_data$condition))
+```
+grade is also categorical on a scale 1 - 13, however grade 2 is not present.
+```{r}
+sort(unique(house_data$grade))
+```
+
+Check for aliased variables
+
+```{r}
+alias(lm(price ~ ., data = house_data_tidy))
+```
+
+It looks like variables sqft_living and sqft_above are aliased, so I will remove sqft_above from the model.
+
+```{r}
+house_data_tidy <- house_data_tidy %>%
+  dplyr::select(-c(sqft_above))
+alias(lm(price ~ ., data = house_data_tidy))
+glimpse(house_data_tidy)
+```
+
+Systematically build a regression model containing up to four main effects (remember, a main effect is just a single predictor with coefficient), testing the regression diagnostics as you go.
+
+```{r}
+library(GGally)
+```
+```{r}
+ggpairs(house_data_tidy)
+```
+
+ggpairs plot is not at all helpful :(
+
+```{r}
+summary(lm(price ~ ., data = house_data_tidy))
+```
+
+I will attempt to build a model with following features: sqft_living, lat, grade, waterfront, view.  
+
+```{r}
+model1a <- lm(price ~ sqft_living, data = house_data_tidy)
+summary(model1a)
+```
+```{r}
+library(ggfortify)
+autoplot(model1a)
+```
+```{r}
+par(mfrow = c(2,2))
+plot(model1a)
+```
+```{r}
+model1b <- lm(price ~ lat, data = house_data_tidy)
+summary(model1b)
+```
+```{r}
+par(mfrow = c(2,2))
+plot(model1b)
+```
+```{r}
+model2a <- lm(price ~ sqft_living + waterfront, data = house_data_tidy)
+summary(model2a)
+```
+```{r}
+par(mfrow = c(2,2))
+plot(model2a)
+```
+
+```{r}
+model2b <- lm(price ~ sqft_living + view, data = house_data_tidy)
+summary(model2b)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(model2b)
+```
+
+
+```{r}
+model2c <- lm(price ~ sqft_living + renovated, data = house_data_tidy)
+summary(model2c)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(model2c)
+```
+
+
+```{r}
+anova(model1a, model2b)
+```
+
+```{r}
+model3a <- lm(price ~ sqft_living + view + waterfront, data = house_data_tidy)
+summary(model3a)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(model3a)
+```
+
+```{r}
+model3b <- lm(price ~ sqft_living + view + renovated, data = house_data_tidy)
+summary(model3b)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(model3b)
+```
+
+
+```{r}
+model3c <- lm(price ~ sqft_living + view + grade, data = house_data_tidy)
+summary(model3c)
+```
+```{r}
+par(mfrow = c(2,2))
+plot(model3c)
+```
+```{r}
+anova(model2b, model3c)
+```
+
+```{r}
+model4a <- lm(price ~ sqft_living + view + grade + lat , data = house_data_tidy)
+summary(model4a)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(model4a)
+```
+
+```{r}
+model4b <- lm(price ~ sqft_living + view + grade + yr_built, data = house_data_tidy)
+summary(model4b)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(model4b)
+```
+
+
+
+* model1a: price ~ sqft_living RSE: 261500, r-squared: 0.4929, not too satisfied with Residuals vs Fitted plot (top heavy), scale location is skewed, Residuals vs Leverage are over Cook's distance. 
+* model1b: price ~ waterfront RSE: 349400, r-squared: 0.09425, looks better on diagnostic chart.
+
+***model1a seems overall better based on r-sqared value***
+ 
+* model2a: price ~ sqft_living + waterfront RSE: 251500, r-sq: 0.5307
+* model2b: price ~ sqft_living + view       RSE: 250300, r-sq: 0.5353
+* model2c: price ~ sqft_living + renovated  RSE: 259500, r-sq: 0.5005
+
+***model2b seems overal better due to r-sq***
+
+* model3a: price ~ sqft_living + view + waterfront RSE: 246100, r-sq: 0.5507
+* model3b: price ~ sqft_living + view + renovated RSE: 249000, r-sq: 0.54
+* model3c: price ~ sqft_living + view + grade     RSE: 240000, r-sq: 0.5725
+
+***model3c seems better based on overall r-sq*** 
+
+* model4a: price ~ sqft_living + view + grade + lat      RSE: 221500, r-sq: 0.636
+* model4b: price ~ sqft_living + view + grade + yr_built RSE: 224800, r-sq: 0.625
+
+***model4a is better due to r-sq and diagnostic chart***
+
+
+Consider possible interactions between your four main effect predictors and test their effect upon r2. Choose your best candidate interaction and visualise its effect.
+
+
+```{r}
+interact_model <- lm(price ~ sqft_living : grade + view + lat, data = house_data_tidy)
+summary(interact_model)
+```
+
+price ~ sqft_living : grade + view + lat : r-sq: 0.6701 is the best candidate for interacting features
+
+```{r}
+price_resid<- house_data_tidy %>%
+  add_residuals(model4a)%>%
+  dplyr::select(-price)
+
+coplot(resid ~ sqft_living | grade + view + lat, data = price_resid, columns = 3)
+```
+not sure about the above chart
+
+
+Calculate the relative importance of predictors from your best 4-predictor model (i.e. the model without an interaction). Which predictor affects price most strongly?
+
+```{r}
+library(relaimpo)
+```
+```{r}
+calc.relimp(model4a, type = "lmg", rela = TRUE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

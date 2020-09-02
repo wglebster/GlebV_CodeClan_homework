@@ -102,27 +102,23 @@ autoplot(price_carat_model)
 
 Run a regression with one or both of the predictor and response variables log() transformed and recheck the diagnostics. Do you see any improvement?
 
+
 ```{r}
-diamonds_transformed <- diamonds_dummy %>%
-  transform(price,carat, method = "log")
-View(diamonds_transformed)
-```
-```{r}
-diamonds_transformed_model <- lm(price ~ carat, data = diamonds_transformed)
+diamonds_transformed_model <- lm(log(price) ~ log(carat), data = diamonds_dummy)
 summary(diamonds_transformed_model)
 autoplot(diamonds_transformed_model)
 ```
+---
+This is reduntant, as makes much more sense after the homework review.
+
+
 
 I cannot see any improvement, standard error is still very high, R-square and p-values are the same.
 
 
 Let’s use log() transformations of both predictor and response. Next, experiment with adding a single categorical predictor into the model. Which categorical predictor is best? [Hint - investigate r2 values]
-```{r}
-diamonds_transformed_model2 <- lm(price ~ carat:clarity, data = diamonds_transformed)
-summary(diamonds_transformed_model2)
-```
 
-price ~ carat:clarity provides r-square closest to 1, I think carat:clarity might be the most statistically significant predictor of the price.
+
 
 
 
