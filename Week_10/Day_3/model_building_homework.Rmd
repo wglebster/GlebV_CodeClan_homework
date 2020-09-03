@@ -20,10 +20,8 @@ You might like to think about removing some or all of date, id, sqft_living15, s
 house_data_tidy <- house_data %>%
   mutate(waterfront = ifelse(waterfront == 1, TRUE, FALSE),
          renovated = ifelse(yr_renovated == 0, FALSE, TRUE)) %>%
-  mutate(condition = cut(condition, 5, labels = c("1", "2", "3", "4", "5"))) %>%
-  mutate(grade = cut(grade, 12, labels = c("1", "3", "4", "5",
-                                           "6", "7", "8", "9", 
-                                           "10", "11", "12", "13"))) %>%
+  mutate(condition = as_factor(condition)) %>%
+  mutate(grade = as_factor(grade)) %>%
   dplyr::select(-c(id, date, sqft_living15, sqft_lot15, yr_renovated))
   
 glimpse(house_data_tidy)
