@@ -1,0 +1,353 @@
+---
+title: "Model Building homework"
+author: "GlebV"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+```
+
+
+### Get and prepare  data
+
+Get and inspect the data.
+```{r}
+avocado <- read_csv("data/avocado.csv")
+glimpse(avocado)
+```
+```{r}
+library(lubridate)
+library(janitor)
+```
+
+Tidy up data:
+
+I defined date_of_month and month as factors variables, as they might provide some insight. I also converted year as.factor, as year does not represent continuous data. 
+```{r}
+clean_avocado <- avocado  %>%
+  mutate(month = as.factor(month(Date)), 
+         day_of_month = as.factor(mday(Date)),
+         year = as.factor(year)) %>%
+  clean_names() %>%
+  select(-c(x1, date))
+
+glimpse(clean_avocado)
+```
+```{r}
+#check for NA values
+summary(clean_avocado)
+```
+
+Check for aliased variables in the dataset:
+
+```{r}
+alias(lm(average_price ~ . , data = clean_avocado))
+```
+It looks like there arent any variables that are aliased, according to the code. 
+
+However it is possible to work out the number of small/large/x_large bags based on total_bags. 
+
+#### test_1_model
+
+* As step one I will check model statisticks with all the features included in it.
+```{r}
+test_1_model <- lm(average_price ~ . , data = clean_avocado)
+summary(test_1_model)
+```
+
+***all variables***
+```{r}
+library(broom)
+```
+
+```{r}
+0.239/mean(clean_avocado$average_price)*100
+glance(test_1_model)
+```
+I think that an error that is 17% of the mean avocado price is quite high, I would also prefer ARS higher than 0.6478 
+
+But lets check the diagnostics: 
+```{r}
+par(mfrow = c(2,2))
+plot(test_1_model)
+```
+Data seems quite well ditributed. There are some outliers, but they don't seem to influence the data to dramatically. 
+
+I will be using following dataframe to compare all Persimonious diagnostic values to help me choose the most suitable explanatory model. 
+```{r}
+#I can have an all model comparisons in a single tibble. 
+#I can use add_row to add data.
+model_compare <- tibble(model = "test_1_model",
+                        Adj_R_sq = round(digits = 4,summary(test_1_model)$adj.r.squared),
+                        AIC = round(digits = 4, AIC(test_1_model)),
+                        BIC = round(digits = 4, BIC(test_1_model))
+                        )
+model_compare
+```
+
+***I will limit my model to 4 features***
+
+To try and keep it simple, I will limit my model to max 4 features. I will check if including interactions helps to improve the model performance. 
+
+I found that it may be helpful to compare T-values in the overfitted model to get a general feel of which features might be helpful for manual model building.
+
+#### model_1
+
+```{r}
+model_1 <- lm(average_price ~ type + 
+                year + month + day_of_month + region, data = clean_avocado)
+summary(model_1)
+```
+
+Checking parsimonious numbers, model_1 performs worse than overfitted test_1_model. 
+
+```{r}
+model_compare <- model_compare %>% 
+  add_row(model = "model_1", 
+          Adj_R_sq = round(digits = 4, summary(model_1)$adj.r.squared),
+          AIC = round(digits = 4, AIC(model_1)),
+          BIC = round(digits = 4, BIC(model_1))
+          )
+model_compare
+```
+
+Check model_1 diagnostic chart
+
+```{r}
+par(mfrow = c(2,2))
+plot(model_1)
+```
+
+The data is spread quite well, but I am concerned about Residuals vs Leverage - too much data on the extreme right.
+
+#### model_2
+
+model_2 has interactions year:month:day_of_month.
+
+```{r}
+model_2 <- lm(average_price ~ type + 
+                year:month:day_of_month + region, data = clean_avocado)
+```
+```{r}
+model_compare <- model_compare %>% 
+  add_row(model = "model_2", 
+          Adj_R_sq = round(digits = 4, summary(model_2)$adj.r.squared),
+          AIC = round(digits = 4, AIC(model_2)),
+          BIC = round(digits = 4, BIC(model_2))
+          )
+model_compare
+```
+```{r}
+par(mfrow = c(2,2))
+plot(model_2)
+```
+This model has better parsimonious values than is overfitted due to included interactions. 
+
+If I am including year:month:day_of_month interaction, am I better off by perorming time series analysis? I feel like I am overfitting by including day_of_month interaction, as this data is at the most granular level and there is possibility that it doesn't always get recorded.
+
+#### model_3
+
+```{r}
+model_3 <- lm(average_price ~ type + 
+                year:month + region, data = clean_avocado)
+summary(model_3)
+```
+
+```{r}
+model_compare <- model_compare %>% 
+  add_row(model = "model_3", 
+          Adj_R_sq = round(digits = 4, summary(model_3)$adj.r.squared),
+          AIC = round(digits = 4, AIC(model_3)),
+          BIC = round(digits = 4, BIC(model_3))
+          )
+model_compare
+```
+```{r}
+par(mfrow = c(2,2))
+plot(model_3)
+```
+So far model_3 seems to be the most suitable and year:month are more likely to be recorded than year:month:day_of_month. Also year:month is less granular, therefore I don't feel guilty for potentially overfitting the data. 
+
+
+#### model_4
+
+```{r}
+model_4 <- lm(average_price ~ type:region +  
+              year:month, data = clean_avocado)
+summary(model_4)
+```
+
+```{r}
+model_compare <- model_compare %>% 
+  add_row(model = "model_4", 
+          Adj_R_sq = round(digits = 4, summary(model_4)$adj.r.squared),
+          AIC = round(digits = 4, AIC(model_4)),
+          BIC = round(digits = 4, BIC(model_4))
+          )
+model_compare
+```
+
+model_4 is the strongest so far, unless I am going overboard :)
+
+```{r}
+par(mfrow = c(2,2))
+plot(model_4)
+```
+Norm Q-Q distribution is not great is any of the 6 models, residuals vs leverage are heavy to the right. 
+
+What concerns me the most is that adding interactions, causes formation of data clusters on the extreme right in Residuals vs Fitted and Scale-Location.
+
+#### model_5
+
+```{r}
+model_5 <- lm(average_price ~ type:region +  
+              month, data = clean_avocado)
+summary(model_5)
+```
+```{r}
+model_compare <- model_compare %>% 
+  add_row(model = "model_5", 
+          Adj_R_sq = round(digits = 4, summary(model_5)$adj.r.squared),
+          AIC = round(digits = 4, AIC(model_5)),
+          BIC = round(digits = 4, BIC(model_5))
+          )
+model_compare
+```
+Removing annual variation from the model changes its parsimonious diagnostic values.
+
+```{r}
+par(mfrow = c(2,2))
+plot(model_5)
+```
+However data distribution seems to be the best of all models, except for Residuals vs Leverage.
+
+#### model_6
+
+```{r}
+model_6 <- lm(average_price ~ type +  
+              year:month, data = clean_avocado)
+summary(model_6)
+```
+```{r}
+model_compare <- model_compare %>% 
+  add_row(model = "model_6", 
+          Adj_R_sq = round(digits = 4, summary(model_6)$adj.r.squared),
+          AIC = round(digits = 4, AIC(model_6)),
+          BIC = round(digits = 4, BIC(model_6))
+          )
+model_compare
+```
+Excluding Region reduces model accuracy, therefore I will not pursue it.
+
+### Further fine tuning and diagnostics. 
+
+I feel that model_4 & model_5 are good contenders to undergo further diagnostics. 
+
+model_4 has very good parsimonious values, but model_5 has the best distribution of data. 
+#### Train & Test
+
+create training and testing sets
+
+*model_4
+```{r}
+n_data <- nrow(clean_avocado) #18249 rows
+test_index <- sample(1:n_data, size = n_data * 0.2)
+
+train_set <- slice(clean_avocado, -test_index)
+test_set <- slice(clean_avocado, test_index)
+```
+
+```{r}
+model_4_train <- lm(average_price ~ type:region +  
+                    year:month , data = train_set)
+model_4_predict <- predict(model_4_train, newdata = test_set)
+
+model_5_train <- lm(average_price ~ type:region +  
+                    month, data = train_set)
+model_5_predict <- predict(model_5_train, newdata = test_set)
+```
+
+model_4 & model_5 train_vs_predict performance.
+```{r}
+median(abs(model_4_predict - test_set$average_price))
+median(abs(model_5_predict - test_set$average_price))
+```
+Prediction error in model_4 is lower than in model_5. 
+
+In model_4 some intercations cannot be calculated and I am getting NAs. 
+
+This is why I am getting a warning: "prediction from a rank-deficient fit may be misleading". 
+
+Also p-value is over 5% for some type:region interactions, I wonder if transforming data will help overcome this issue?
+
+I will first attemt K-fold validation: 
+```{r}
+library(caret)
+```
+
+```{r}
+cv_model_4 <- trainControl(method = "cv",
+                            number = 10,
+                            savePredictions = TRUE)
+model_4_fold <- train(average_price ~ type:region +  
+                    year:month, data = clean_avocado,
+                    trControl = cv_model_4, method = "lm")
+###########
+cv_model_5 <- trainControl(method = "cv",
+                           number = 10,
+                           savePredictions = TRUE)
+model_5_fold <- train(average_price ~ type:region +  
+              month, data = clean_avocado, trControl = cv_model_5, method = "lm")
+
+```
+```{r}
+mean(model_4_fold$resample$RMSE)
+mean(model_4_fold$resample$Rsquared)
+#####
+mean(model_5_fold$resample$RMSE)
+mean(model_5_fold$resample$Rsquared)
+```
+***Same as in parsimonious tests model_4 performs better than model_5***
+
+I found it useful to run train&test diagnostic and/or K-fold test, because both of them pointed out that my models may be misleading due to model's inability to calculculate effect of some interactions. 
+
+
+##Predictive model.
+
+Just going to try using "gmulti" to see again how it works.
+```{r}
+library(glmulti)
+```
+
+```{r}
+future_avocado_model <- glmulti(average_price ~ 
+                                total_volume + x4046 + 
+                                x4225 + x4770 + total_bags + 
+                                small_bags + large_bags + 
+                                x_large_bags + type + 
+                                year + region + month + 
+                                day_of_month, data = clean_avocado, 
+                                method = "h", level = 1)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
