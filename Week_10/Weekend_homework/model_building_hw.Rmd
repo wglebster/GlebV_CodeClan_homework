@@ -333,7 +333,6 @@ future_avocado_model <- glmulti(average_price ~
 ```{r}
 summary(future_avocado_model)
 summary(future_avocado_model)$bestmodel
-
 ```
 ```{r}
 # relative importance of features
@@ -378,6 +377,30 @@ plot(glmulti_avo_model_1)
 ```
 This model also seems to have the best distribution of data. 
 
+Now test it versus model_4 using K-fold:
+
+```{r}
+glmulti_avo_model_1_k <- trainControl(method = "cv",
+                                    number = 10,
+                                    savePredictions = TRUE)
+glmulti_avo_model_1_fold <- train(average_price ~ year + month + 
+                          day_of_month + x4225 + x4770 + 
+                          large_bags + x_large_bags + type + 
+                          region,
+                          data = clean_avocado,
+                          trControl = glmulti_avo_model_1_k, method = "lm")
+```
+
+No warnings / errors with this model, it is very promising :)
+
+```{r}
+mean(model_4_fold$resample$RMSE)
+mean(model_4_fold$resample$Rsquared)
+#####
+mean(glmulti_avo_model_1_fold$resample$RMSE)
+mean(glmulti_avo_model_1_fold$resample$Rsquared)
+```
+GLMulti model does not seem to be as good as model_4
 
 
 # QUIZ
