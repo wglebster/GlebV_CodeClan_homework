@@ -187,7 +187,7 @@ model_compare <- model_compare %>%
 model_compare
 ```
 
-model_4 is the strongest so far, unless I am going overboard :)
+model_4 is the strongest so far, unless I am going overboard :) I wish I took note of R-Sq values in addition to Adj_R_sq.  
 
 ```{r}
 par(mfrow = c(2,2))
@@ -327,27 +327,141 @@ future_avocado_model <- glmulti(average_price ~
                                 x_large_bags + type + 
                                 year + region + month + 
                                 day_of_month, data = clean_avocado, 
-                                method = "h", level = 1)
+                                method = "g", level = 1, plotty = FALSE)
 ```
 
+```{r}
+summary(future_avocado_model)
+summary(future_avocado_model)$bestmodel
+
+```
+```{r}
+# relative importance of features
+plot(future_avocado_model, type = "s") 
+#models below the red line are worth considering, however the algorithm is likely to have chosen the best suitable model
+plot(future_avocado_model, type = "p") 
+plot(future_avocado_model, type = "w") 
+```
+Display the list of all models in ranked order from best to worst.
+```{r}
+weightable(future_avocado_model)
+```
+
+So the best model suggested by GLMulti is: average_price ~ year + month + day_of_month + x4225 + x4770 + large_bags + x_large_bags + type + region.
+
+I will now test it: 
+
+```{r}
+glmulti_avo_model_1 <- lm(average_price ~ year + month + 
+                          day_of_month + x4225 + x4770 + 
+                          large_bags + x_large_bags + type + 
+                          region, 
+                        data = clean_avocado)
+summary(glmulti_avo_model_1)
+```
+
+glmulti_avo_model_1 (suggested by glmulti). It has R-sq of 0.6498 and adj-R-sq of 0.6478, which suggests to me that it may be overfitted. RSE is 0.239.
+
+```{r}
+model_compare <- model_compare %>% 
+  add_row(model = "glmulti_avo_model_1", 
+          Adj_R_sq = round(digits = 4, summary(glmulti_avo_model)$adj.r.squared),
+          AIC = round(digits = 4, AIC(glmulti_avo_model)),
+          BIC = round(digits = 4, BIC(glmulti_avo_model))
+          )
+model_compare
+
+```
+```{r}
+par(mfrow = c(2,2))
+plot(glmulti_avo_model_1)
+```
+This model also seems to have the best distribution of data. 
 
 
 
+# QUIZ
 
+## 1. I want to predict how well 6 year-olds are going to do in their final school exams. Using the following variables am I likely under-fitting, fitting well or over-fitting? Postcode, gender, reading level, score in maths test, date of birth, family income.
 
+If the math test is mandatory for all pupils, this model may be helpful in predicting the final exam results. 
 
+Including date of birth, I believe will tend toward overfitting. We should make sure that the training dataset contains information of 6-year olds only.
 
+## 2. If I have two models, one with an AIC score of 34,902 and the other with an AIC score of 33,559 which model should I use?
 
+Generally speaking ower AIC score is more parsimonious, therefore I'd select the model with score of 34902.
 
+## 3. I have two models, the first with: r-squared: 0.44, adjusted r-squared: 0.43. The second with: r-squared: 0.47, adjusted r-squared: 0.41. Which one should I use?
 
+Generally speaking the higher r-squared/adjusted r-squared values are better. But while r-squared will be increasing with each additional feature, adjusted r-square will converge and start decreasing at some point. The point of convergence indicates that the model is overfitted.
 
+## 4. I have a model with the following errors: RMSE error on test set: 10.3, RMSE error on training data: 10.4. Do you think this model is over-fitting?
 
+Usually it is expected that a model fits to training-set better than to test-set, therefore I expect that the model described is overfitted.
 
+## 5. How does k-fold validation work? 
 
+A dataset is split into K-number of folds. Each fold is used for testing at some point during iterations, the other folds are used to train the model. Iterations continue until each fold has been used as test set. 
 
+## 6. What is a validation set? When do you need one?
 
+A validation set can be used between training and testing. Once a few candidate models have been selected, they could be fine tuned using a validation set, to make sure they do not overfit. The next step is to test the models on a test set to make sure they perform as expected (hoped for). 
 
+## 7. Describe how backwards selection works.
 
+It establishes the most optimal model features by starting from the most overfitted model and working backwards, eliminating features, until the modelbecomes well-fitted.   
 
+## 8. Describe how best subset selection works.
 
+Best subset regression compares all possible models using specified predictors and displays the best fitting models that have x-number of predictors. the output provides a list of models with their summary statistics. 
 
+The alternative is Stepwise Regression, which might be easier to interpret.
+
+## 9. It is estimated on 5% of model projects end up being deployed. What actions can you take to maximise the likelihood of your model being deployed?
+
+Be able to explain what the model does and why it is useful and if it does what it needs to do. Document the model!
+
+Train, Validate, Test. Be able to explain and justify inclusion/exclusion of parameters.  
+
+## 10. What metric could you use to confirm that the recent population is similar to the development population?
+
+mean(pop) - mean(dev_pop)
+
+## 11. How is the Population Stability Index defined? What does this mean in words?
+
+PSI could help in determing if the data has changed significantly and if an existing model is still suitable to use on new data. 
+
+Events such as changes in product characteristics or large socioeconomic events could deem models useless. Model performance is prone to deteriorating over time in general. 
+
+## 12. Above what PSI value might we need to start to consider rebuilding or recalibrating the model. 
+
+If PSI score goes over 0.2 the model needs to be replaced / recalibrated. 
+
+## 13. What are the common errors that can crop up when implementing a model?
+
+https://www.strategywise.com/five-common-errors-to-avoid-when-building-predictive-models/
+
+* Lack of understanding of the business use case. 
+
+* Lack of Data Integrity.
+
+* The model over or under fits. 
+
+* Bias/Variance imbalance.
+
+It is important to build balanced (not too complex and not too simple). Overly complex models will tend to have too much variance in their outputs. Overly simple models are likely to produce biased outputs. 
+
+* Testing and evaluation errors. 
+
+## 14. After performance monitoring, if we find that the discrimination is still satisfactory but the accuracy has deteriorated, what is the recommended action? 
+
+Root cause should be investigated and the model should be recalibrated/rebuilt.
+
+## 15. Why is it important to have a unique model identifier for each model? 
+
+So that models can be identified/distinguished from others. 
+
+## 16. Why is it important to document the modelling rationale and approach?
+
+So that the model can be understood by others, e.g. for audit purposes.
