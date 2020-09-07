@@ -1,0 +1,126 @@
+---
+title: "Clustering homework"
+athor: "Gleb V"
+output: html_notebook
+---
+
+Use k-means clustering to investigate potential relationships in the dataset computers.csv that has information of computer sales. We are interested in relationships between hd (hard drive size) and ram (type of computer memory):
+
+#### Explore the data - do you think it looks potentially suitable for clustering?
+```{r}
+library(tidyverse)
+library(janitor)
+```
+```{r}
+computers <- read_csv("data/computers.csv")
+head(computers)
+```
+```{r}
+computers_scaled <- computers %>%
+  mutate_if(is.numeric, scale) %>%
+  select(hd, ram)
+
+head(computers_scaled)
+summary(computers_scaled)
+```
+
+```{r}
+computers_scaled %>%
+  ggplot(aes(x = hd, y = ram,))+
+  geom_point()
+```
+* Relation between data points seems to be very linear, almost categorical, I think it can be split into 2 or 3 clusters, but the split wil not be ideal. 
+ 
+#### Chose a value of k.
+
+```{r}
+library(broom)
+```
+```{r}
+max_k <- 20
+
+k_clusters <- tibble(k = 1:max_k) %>%
+  mutate(kclust = map(k, ~kmeans(computers_scaled, .x, nstart = 25)),
+         tidied = map(kclust, tidy),
+         glanced = map(kclust, glance),
+         augmented = map(kclust, augment, computers)
+         )
+k_clusters
+```
+```{r}
+clusterings <- k_clusters %>%
+  unnest(glanced)
+clusterings
+```
+```{r}
+ggplot(clusterings, aes(x=k, y=tot.withinss)) +
+  geom_point() +
+    geom_line() +
+    scale_x_continuous(breaks = seq(1, 20, by = 1))
+```
+
+Based on the above chart, 2 is the optimal number of clusters, however I will run the other two methods, two confirm if two clusters is indeed the best split and to practice. 
+
+```{r}
+fviz_nbclust(computers_scaled, kmeans, method = "silhouette", nstart = 50)
+```
+
+From the difference or 2 clusters to 10 clusters, it seems that the data actually is not that well suted for Kmeans clustering. 
+
+```{r}
+fviz_nbclust(computers_scaled, kmeans, method = "gap_stat", nstart = 25, k.max = 10)
+```
+
+There is an error: "did not converge in 10 iterations". Also, this test suggested 7 clusters, which again is different from previous result of 10. 
+
+#### Create clusters with chosen value of k - pull out the sizes of the clusters and the average of each variable in the dataset for each cluster.
+
+```{r}
+library(cluster)
+library(factoextra)
+```
+
+I will attempt to visualise the split based on 2, 10 and 7 clusters.
+```{r}
+sil_2_clusters <- clusterings %>%
+  unnest(augmented) %>%
+  filter(k == 2) %>%
+  select(.cluster) %>%
+  pull()
+
+sil <- silhouette(as.numeric(sil_2_clusters), dist(computers_scaled))
+fviz_silhouette(sil)
+
+sil_10_clusters <- clusterings %>%
+  unnest(augmented) %>%
+  filter(k == 10) %>%
+  select(.cluster) %>%
+  pull()
+
+sil <- silhouette(as.numeric(sil_10_clusters), dist(computers_scaled))
+fviz_silhouette(sil)
+
+sil_7_clusters <- clusterings %>%
+  unnest(augmented) %>%
+  filter(k == 7) %>%
+  select(.cluster) %>%
+  pull()
+
+sil <- silhouette(as.numeric(sil_7_clusters), dist(computers_scaled))
+fviz_silhouette(sil)
+```
+These grapths do not look great to me, 2 and 10 cluster splits are below average line. Also there seem to be negative values in all three splits, which indicates that points were placed into the wrong cluster.
+
+#### Visualise the clusters.
+
+```{r}
+clusterings %>% 
+  unnest(cols = c(augmented)) %>%
+  filter(k == 10) %>%
+ ggplot(aes(x = hd, y = ram)) +
+  geom_point(aes(color = .cluster))
+```
+
+#### Comment on the results - do you think the clustering worked well?
+
+Based on 10 clusters, clustering has not worked well at all on this dataset. The distances are all very different in different clusters, sizes of clusters seem to be very different also, which doesn't sound like a good thing. 
