@@ -1,6 +1,8 @@
 ---
 title: "What is Naïve Bayes?"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 # Math is !FUN

@@ -1,0 +1,151 @@
+---
+title: "Decision Trees hw"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(rpart)
+library(rpart.plot)
+```
+
+# Q1. Load and clean up data.
+
+```{r}
+titanic_set <- read_csv('data/titanic_decision_tree_data.csv')
+shuffle_index <- sample(1:nrow(titanic_set))
+# shuffle the data so class order isn't in order - need this for training/testing split later on
+titanic_set <- titanic_set[shuffle_index, ]
+
+summary(titanic_set)
+titanic_set
+```
+```{r}
+clean_titanic <- titanic_set %>%
+  select(sex,
+         class = pclass, 
+         age_status = age, 
+         port_embarkation = embarked, 
+         sibsp = sib_sp,
+         parch,
+         survived_flag = survived
+         ) %>%
+  mutate(sex = as.factor(sex),
+         class = factor(class, levels = c(1,2,3), labels = c("Upper class", "Middle class", "Lower class")),
+         age_status = as.factor(ifelse(age_status<=16, "Child", "Adult")),
+         port_embarkation = as.factor(case_when(
+           port_embarkation == "C" ~ "Cherbourg",
+           port_embarkation == "Q" ~ "Queenstown",
+           port_embarkation == "S" ~ "Southampton")
+         ),
+         survived_flag = factor(survived_flag, levels = c(0,1), labels = c("Yes", "No"))
+         ) %>%
+  na.omit() # drop all NAs
+  
+summary(clean_titanic)
+```
+
+# Q2. Check out the data, establish which variables are most useful for predicting who's gonna die.
+
+```{r}
+library(GGally)
+```
+```{r}
+pairs1 <- clean_titanic %>%
+  select(sex, class, age_status, survived_flag)
+pairs2 <- clean_titanic %>%
+  select(-c(sex, class, age_status))
+
+ggpairs(pairs1, progress = FALSE)
+ggpairs(pairs2, progress = FALSE)
+```
+From pair1 plot I understand that there was slightly higher number of female survivors, Upper cabin class passengers were mohre likely to survive, but not by a large margin. Adults were more likely to survive than children (is it because there ere more adults than children overall?)
+
+From plot2 I can see that those who boarded in Southampton were more likely to survive than those who boarded in other two ports (This may be due to the fact that overall there were more passengers from Southampton).
+
+Those who travelled without partners/siblings were more likely to survive. 
+
+Those who travelled without parents/children (or with a nanny) were more likely to survive. 
+
+
+# Q3. Building model.
+
+
+create test & train sets.
+```{r}
+n_data <- nrow(clean_titanic)
+test_index <- sample(1:n_data, size = n_data*0.1)
+test_titanic <- slice(clean_titanic, test_index)
+train_titanic <- slice(clean_titanic, -test_index)
+```
+
+I selected 90% of all available data as training dataset, because after dropping all NA values, there wre only just over 712 rows of data left, which is not very much.
+
+
+check if sets are balanced ok.
+```{r}
+train_titanic %>%
+  tabyl(survived_flag)
+test_titanic %>%
+  tabyl(survived_flag)
+```
+
+The split is about 60/40 in training set and about 56/44 in test set. 
+The way this data is split seems quite representative of the overall available data.
+
+
+# Q4. Create decision tree model and plot it.
+
+```{r}
+titanic_model <- rpart(survived_flag ~ . , data = train_titanic, method = "class")
+
+rpart.plot(titanic_model, yesno = 2)
+```
+
+# Q5. Write down the findings.
+
+If I read it correctly, it seems that the most important charachteristics for survival are as follows: gender, class, parents/siblings, age_status. 
+
+Looks like most survivers wre male without any other charachteristics. 
+
+One was least like to survive if one travelled in Lower class. 
+
+Adults were more likely to survive than children.
+
+Those traveling with 1 or more siblings/parents were less likely to survive. 
+
+# Q6. Test and add predictions, create confusion matrix. 
+
+```{r}
+library(modelr)
+```
+
+```{r}
+titanic_predict <- test_titanic %>%
+  add_predictions(titanic_model, type = "class")
+titanic_predict
+```
+
+Looks ok so far, will check confusion matrix now.
+```{r}
+library(yardstick)
+```
+
+```{r}
+conf_matrix <- titanic_predict %>%
+  conf_mat(truth = survived_flag, estimate = pred)
+conf_matrix
+```
+This looks fairly accurate, but could be better: 
+
+The model predicted survival correctly (TP) 38 times, it predicted dying (TN) 18 times correctly - could be better.
+It predicted survival incorrectly (FP) 13 times, it predicted dying incorrectly 2 times.
+
+```{r}
+pred_accuracy <- titanic_predict %>%
+  accuracy(truth = survived_flag, estimate = pred)
+pred_accuracy
+```
+
+Accuracy estimete 79% is ok :) 
