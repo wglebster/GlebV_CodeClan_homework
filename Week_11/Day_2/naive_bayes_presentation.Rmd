@@ -1,0 +1,94 @@
+---
+title: "What is Naïve Bayes?"
+output: html_notebook
+---
+
+# Math is !FUN
+
+![naive_bayes_maths](http://shatterline.com/blog/wp-content/uploads/2013/09/bayes-pictorial5.png)
+
+
+### What's classification and how is it different to clustering? 
+
+It's a machine learning model that is used to sort out different objects based on certain features. 
+
+ - Classification uses **predifined classes** in which objects are assigned.
+
+ - Clustering **identifies similarities between objects** and groups the objects according to those common characteristics.   
+
+### What's Bayes Classifier good for?
+
+It can help us determining probability of *A* happening, given that *B* has occured. 
+
+*B* is the evidence.
+
+*A* is the hypothesis.
+
+
+
+#### P(A|B) = (P(B|A)*P(A)) / P(B)
+
+# Example:
+
+Should I go play golf or not?
+
+![to_golf_or_not_to_golf](https://miro.medium.com/max/700/1*oR4RsdQsbp_zzGzzwblq0Q.png)
+
+If I was very indicisive, I could use Bayes algorithm to help me in making the decision whether I should play golf or not. 
+
+The columns in the above dataset represent features of the day. 
+Rows are individual entries (days). 
+
+The first entry seems unsuatable for playing golf, because it is rainy, hot and humidity is high, but it is not windy. 
+
+Two assumptions: 
+
+* Predictors are independent.
+
+* All predictors have equal effect on the outcome. I.e. is is not more important how windy it is than how rainy it is. 
+
+
+## Advantages of naive Bayes: 
+
+* When assumption of feature independence holds true, the algorithm performs better than other models. 
+
+* It requires relatively little amount of data, therefore it is quick to train. 
+
+* It is (relatively) easy to implement. 
+
+## Disadvantages of naive Bayes:
+
+* It's main limitation is the assumption of independent predictors. 
+It is almost impossible to achieve in real life. 
+
+* If categorical variable has a category in test data set, which was not observed in training data set, then model will assign a 0 (zero) probability and will be unable to make a prediction. This is known as "Zero Frequency". This issue can be solved using smoothing. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------
+
+Sources: 
+
+ShatterLine Blog: http://shatterline.com/blog/2013/09/12/not-so-naive-classification-with-the-naive-bayes-classifier/
+(includes code for R implementation)
+
+
+Towards Data Science, Naive Bayes Classifier:
+https://towardsdatascience.com/naive-bayes-classifier-81d512f50a7c
+
+
+The Professionals Point, Advantages and Disadvantages of Naive Bayes in Machine Learning: http://theprofessionalspoint.blogspot.com/2019/03/advantages-and-disadvantages-of-naive.html
+
+
+bismart, Classification Vs. Clustering - A Practical Explanation: 
+https://blog.bismart.com/en/classification-vs.-clustering-a-practical-explanation

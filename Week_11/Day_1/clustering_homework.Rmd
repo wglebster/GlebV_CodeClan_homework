@@ -117,8 +117,12 @@ These grapths do not look great to me, 2 and 10 cluster splits are below average
 clusterings %>% 
   unnest(cols = c(augmented)) %>%
   filter(k == 10) %>%
- ggplot(aes(x = hd, y = ram)) +
-  geom_point(aes(color = .cluster))
+ ggplot(aes(x = hd, y = ram, colour = .cluster, label = .cluster)) +
+  geom_point(aes(color = .cluster)) +
+  geom_text(hjust = 0, vjust = - 0.5, size = 3)
+```
+```{r}
+unnest(clusterings, cols = augmented)
 ```
 
 #### Comment on the results - do you think the clustering worked well?
