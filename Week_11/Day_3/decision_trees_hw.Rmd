@@ -149,3 +149,39 @@ pred_accuracy
 ```
 
 Accuracy estimete 79% is ok :) 
+
+
+# Extension.
+
+Same model with additional rpart.control() adjustments.
+
+```{r}
+rpart.control(cp = 0.01, 
+              maxcompete = 4, maxsurrogate = 5, usesurrogate = 2, xval = 10,
+              surrogatestyle = 0, maxdepth = 30)
+              
+titanic_model_2 <- rpart(survived_flag ~ . ,
+                         data = train_titanic, method = "class")
+
+rpart.plot(titanic_model_2, yesno = 2)
+```
+
+```{r}
+titanic_predict_2 <- test_titanic %>%
+  add_predictions(titanic_model_2, type = "class")
+titanic_predict
+```
+
+```{r}
+conf_matrix_2 <- titanic_predict_2 %>%
+  conf_mat(truth = survived_flag, estimate = pred)
+conf_matrix
+```
+
+
+```{r}
+pred_accuracy_2 <- titanic_model_2 %>%
+  accuracy(truth = survived_flag, estimate = pred)
+pred_accuracy
+```
+
