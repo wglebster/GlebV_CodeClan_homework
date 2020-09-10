@@ -156,8 +156,7 @@ Accuracy estimete 79% is ok :)
 Same model with additional rpart.control() adjustments.
 
 ```{r}
-rpart.control(cp = 0.01, 
-              maxcompete = 4, maxsurrogate = 5, usesurrogate = 2, xval = 10,
+rpart.control(cp = 0.01, maxcompete = 4, maxsurrogate = 5, usesurrogate = 2, xval = 10,
               surrogatestyle = 0, maxdepth = 30)
               
 titanic_model_2 <- rpart(survived_flag ~ . ,
