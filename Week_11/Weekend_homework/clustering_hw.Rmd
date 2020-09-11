@@ -1,0 +1,97 @@
+---
+title: "Clustering hw"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+shopping <- read_csv("data/mall_customers.csv") %>%
+  # remove unnecessary columns, as we only need to classify data baeed on annual_income_k & spending_score_1_100. 
+  select(c("Annual Income (k$)", "Spending Score (1-100)")) %>%
+  #scale data as both variables are on different scales at the moment.
+  clean_names()
+
+shopping_scaled <- shopping %>%
+  mutate_all(scale)
+
+shopping_scaled
+```
+
+```{r}
+shopping_scaled %>%
+ggplot(aes(annual_income_k, spending_score_1_100)) +
+  geom_point()
+```
+It looks like this data should fall into clusters relatively well. Probably 5 clusters?
+
+```{r}
+library(cluster)
+library(broom)
+```
+
+```{r}
+k_shopping <- kmeans(shopping_scaled, centers = 5, nstart = 50)
+tidy(k_shopping)
+glance(k_shopping)
+```
+
+```{r}
+k_clusters <- tibble(k = 1:50) %>%
+  mutate(
+    kclust = map(k, ~kmeans(shopping_scaled, ., nstart = 50)),
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, shopping)
+  )
+
+k_clusters
+
+clusterings <- k_clusters %>%
+  unnest(glanced)
+```
+
+```{r}
+clusterings %>%
+  ggplot(aes(x = k, y = tot.withinss)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1,50, by = 1))
+```
+Based on this elbow diagram, I would stick with 5 clusters, however I am slightly cusrious to check classification based on 3 clusters too. 
+
+```{r}
+library(factoextra)
+```
+
+```{r}
+fviz_nbclust(shopping_scaled, kmeans, method = "silhouette", nstart = 50)
+fviz_nbclust(shopping_scaled, kmeans, method = "gap_stat", nstart = 50)
+```
+According to silhouette visualisation, 5 is the optimal number of clusters. 
+However gap_stat suggests it is only 1. 
+
+I will try to visualize both.
+```{r}
+clusterings %>%
+  unnest(cols = augmented) %>%
+  filter(k <= 5) %>%
+  ggplot(aes(x = annual_income_k, y = spending_score_1_100)) +
+  geom_point(aes(color = .cluster)) +
+  facet_wrap(~k)
+```
+It does look like both 2, 3, 4 and 5 cluster options have overlapping datapoints and essentially it would be up to the business to decide how to target their audience. 
+
+I would recommended to consider the following otions: 
+
+  - 2 clusters would allow to target based on spending score, but not based on annual income. Probably this option should be dismissed, as it does not conform to the brief. 
+  
+  - 3 clusters may provide an interesting opportunity. It would allow to target low to middle earners based on their annual income only, but higher earners based on their annual income and spending score. 
+  This option may be interesting to research further, as spending habits of low/mid earners may be quite different to those on higher incomes and therefore it may be more beneficial to provide specific advertising only to thohe on higher incomes. 
+  
+  - 5 clusters would allow targed audience separately by both annual income and spending score, however the groups of audience may overlap, which may cause members of the same audience to receive ads aimed at different audience. 
+  
+This data is not perfectly suitable for clustering, but it can provide a certain amount of insight. 
