@@ -3,3 +3,158 @@ title: "Logistic Regression hw"
 output: html_notebook
 ---
 
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+juice <- read_csv("data/orange_juice.csv") %>%
+  clean_names() %>%
+  mutate(
+    special_ch = ifelse(special_ch == 1, TRUE, FALSE),
+    special_mm = ifelse(special_mm == 1, TRUE, FALSE),
+    store7 = as.factor(store7),
+    weekof_purchase = as.factor(weekof_purchase), 
+    store_id = as.factor(store_id),
+    purchase_mm = ifelse(purchase == "MM", TRUE, FALSE),
+    ) %>%
+  select(-c(purchase, store, store7)) # I chose to remove these variable right away as they are already represented in the dataset in other columns.
+
+juice
+summary(juice)
+unique(juice$store)
+```
+
+```{r}
+library(GGally)
+```
+```{r}
+pairs1 <- c("purchase_mm", "weekof_purchase", "store_id", "price_ch")
+pairs2 <- c("purchase_mm", "price_mm", "disc_ch", "disc_mm")
+pairs3 <- c("purchase_mm", "special_ch", "special_mm", "loyal_ch")
+pairs4 <- c("purchase_mm", "sale_price_mm", "sale_price_ch", "price_diff")
+pairs5 <- c("purchase_mm", "pct_disc_mm", "pct_disc_ch", "list_price_diff")
+```
+
+```{r}
+juice %>%
+  select(purchase_mm, weekof_purchase) %>%
+  ggpairs(cardinality_threshold = 52, report = FALSE)
+
+juice %>%
+ggplot(aes(x = weekof_purchase, y = purchase_mm)) +
+  geom_col()
+#there seems to be quite a lot of variability in purchase_mm depending on weekof_purchase, therefore I will keep weekof_purchase variable.
+
+juice %>%
+  select(pairs1) %>%
+  ggpairs(cardinality_threshold = 52, report = FALSE)
+#weekof_purchase, store_id
+
+juice %>%
+  select(pairs2) %>%
+  ggpairs(report = FALSE)
+#price_mm, disc_mm
+
+juice %>%
+  select(pairs3)%>%
+  ggpairs(report = FALSE)
+#special_ch, special_mm, ?loyal_ch
+
+juice %>%
+  select(pairs4) %>%
+  ggpairs(report = FALSE)
+#sale_price_ch, store7
+
+juice %>%
+  select(pairs5) %>%
+  ggpairs(report = FALSE)
+#pct_disc_mm
+```
+I think, if I was building a model manually, I would use the following variables: weekof_purchase, store_id, price_mm, disc_mm, special_ch, special_mm, sale_price_ch, pct_disc_mm, loyal_ch.
+
+But I am finding it hard to understand, so I will make an automated feature selection.
+
+```{r}
+#create training & testing datasets
+n_data <- nrow(juice)
+test_index <- sample(1:n_data, size = n_data*0.1)
+
+test_juice <- slice(juice, test_index)
+train_juice <- slice(juice, -test_index)
+```
+
+```{r}
+library(modelr)
+library(pROC)
+```
+
+
+```{r}
+#as baseline I will build a model that includes all features
+all_feature_model <- glm(purchase_mm~., data = train_juice, 
+                         family = binomial(link = "logit"))
+
+all_feature_pred <- train_juice %>%
+  add_predictions(all_feature_model, type = "response")
+
+
+roc_all_feature_model <- all_feature_pred %>%
+  roc(response = purchase_mm, predictor = pred)
+
+roc_curve_all_feature <- ggroc(data = roc_all_feature_model, legacy.axes = TRUE)
+coord_fixed()
+
+roc_curve_all_feature
+
+```
+
+
+```{r}
+#secondly I will attempt to plot my selected features
+manual_feature_check <- glm(purchase_mm ~ weekof_purchase + store_id + price_mm + disc_mm + special_ch + special_mm + sale_price_ch + pct_disc_mm + loyal_ch, data = train_juice, family = binomial(link = "logit"))
+
+manual_feature_pred <- train_juice %>%
+  add_predictions(all_feature_model, type = "response")
+
+roc_manual_feature_model <- manual_feature_pred %>%
+  roc(response = purchase_mm, predictor = pred)
+
+roc_curve_manual_feature <- ggroc(data = roc_manual_feature_model, legacy.axes = TRUE)
+coord_fixed()
+
+roc_curve_all_feature
+```
+
+Curves of both models look almost identical :)
+
+Automated model no interactions
+
+```{r}
+library(glmulti)
+```
+
+```{r}
+auto_all_feature_model <- glmulti(purchase_mm ~ . , #testing effects of all features
+                                  data = train_juice, #using training dataset
+                                  level = 1, # main effects only, no interactions
+                                  method = "h", #exhaustive search
+                                  crit = "bic", 
+                                  confsetsize = 10, #keeping only best 10 models
+                                  plotty = FALSE, #no plotting during iteration
+                                  report = TRUE, #report progress during iteration
+                                  fitfunction = "glm",
+                                  family = binomial(link = "logit")
+                                  )
+
+summary(auto_all_feature_model)
+```
+
+
+
+
+
+
+
+
