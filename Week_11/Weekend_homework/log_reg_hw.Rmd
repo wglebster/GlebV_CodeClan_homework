@@ -150,6 +150,25 @@ auto_all_feature_model <- glmulti(purchase_mm ~ . , #testing effects of all feat
 
 summary(auto_all_feature_model)
 ```
+Best model has been identified as: purchase_mm ~ loyal_ch + price_diff
+
+```{r}
+auto_all_feature_model_w_int <- glmulti(purchase_mm ~ . , #testing effects of all features
+                                  data = train_juice, #using training dataset
+                                  level = 2, # include interactions
+                                  marginality = TRUE, #consider pairs only if features are in the model
+                                  method = "h", #exhaustive search
+                                  crit = "bic", 
+                                  confsetsize = 10, #keeping only best 10 models
+                                  plotty = FALSE, #no plotting during iteration
+                                  report = TRUE, #report progress during iteration
+                                  fitfunction = "glm",
+                                  family = binomial(link = "logit")
+                                  )
+
+summary(auto_all_feature_model_w_int)
+```
+
 
 
 
