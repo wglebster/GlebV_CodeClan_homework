@@ -106,6 +106,8 @@ roc_all_feature_model <- all_feature_pred %>%
 roc_curve_all_feature <- ggroc(data = roc_all_feature_model, legacy.axes = TRUE)
 coord_fixed()
 
+alias(all_feature_model)
+
 roc_curve_all_feature
 
 ```
@@ -124,7 +126,12 @@ roc_manual_feature_model <- manual_feature_pred %>%
 roc_curve_manual_feature <- ggroc(data = roc_manual_feature_model, legacy.axes = TRUE)
 coord_fixed()
 
+alias(manual_feature_check)
+
+auc_manual_feature <- auc(roc_manual_feature_model, )
+
 roc_curve_all_feature
+auc_manual_feature
 ```
 
 Curves of both models look almost identical :)
@@ -186,8 +193,80 @@ summary(auto_all_feature_model_w_int)
 
 
 
+I was only able to run g multi once and it identified the following model: purchase_mm ~ loyal_ch + price_diff. I will stick with it and compare performance to purchase_mm ~ . 
 
 
+```{r}
+auto_model <- glm(purchase_mm ~ loyal_ch + price_diff,
+                  data = train_juice, 
+                  family = binomial(link = "logit"))
+
+auto_feature_pred <- train_juice %>%
+  add_predictions(auto_model, type = "response")
+
+roc_auto_model <- auto_feature_pred %>%
+  roc(response = purchase_mm, predictor = pred)
+
+roc_curve_auto_feature <- ggroc(data = roc_auto_model, legacy.axes = TRUE) 
+coord_fixed()
+
+alias(auto_model)
+
+auc_manual_feature <- auc(roc_auto_model, )
+
+roc_curve_all_feature
+auc_manual_feature
+```
+
+Using training dataset, the model "purchase_mm ~ weekof_purchase + store_id + price_mm + disc_mm + special_ch + special_mm + sale_price_ch + pct_disc_mm + loyal_ch" had AUC of 0.9221.
+
+The model "purchase_mm ~ loyal_ch + price_diff" has AUS of 0.9014. 
+
+
+```{r}
+manual_feature_pred_test <- test_juice %>%
+  add_predictions(manual_feature_check, type = "response")
+
+roc_manual_feature_model <- manual_feature_pred_test %>%
+  roc(response = purchase_mm, predictor = pred)
+
+roc_curve_manual_feature_test <- ggroc(data = roc_manual_feature_model, legacy.axes = TRUE)
+coord_fixed()
+
+alias(manual_feature_check)
+
+auc_manual_feature <- auc(roc_manual_feature_model, )
+
+roc_curve_all_feature
+auc_manual_feature
+```
+
+```{r}
+auto_model_test <- glm(purchase_mm ~ loyal_ch + price_diff, 
+                       data = test_juice,
+                       family = binomial(link = "logit")
+                       )
+
+auto_model_test_pred <- test_juice %>%
+  add_predictions(auto_model_test, type = "response")
+
+roc_auto_model_test <- auto_model_test_pred %>%
+  roc(response = purchase_mm, predictor = pred)
+
+roc_curve_auto_model_test <- ggroc(data = roc_auto_model_test, legacy.axes = TRUE)
+coord_fixed()
+
+alias(auto_model_test)
+
+auc_auto_model <- auc(roc_auto_model_test, )
+
+roc_curve_all_feature
+auc_manual_feature
+```
+
+Manual model AUC using test data was: 0.8666
+
+***I have no idea :(***
 
 
 
