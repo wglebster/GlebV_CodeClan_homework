@@ -2,6 +2,124 @@
 title: "Text mining hw"
 output: html_notebook
 ---
+```{r}
+library(janeaustenr)
+library(tidyverse)
+library(tidytext)
+library(janitor)
+```
+
+# 1. Find the most common words in both Pride & Prejudice and Sense & Sensibility.
+
+```{r}
+pap_df <- tibble(text = prideprejudice) %>%
+  unnest_tokens(word, text) 
+#find most common words in prideandprejudice (pap)
+pap_most_common_words <- pap_df %>%
+  count(word, sort = TRUE)
+
+#find most common words in sensandsensibility (sas)
+sas_df <- tibble(text = sensesensibility) %>%
+  unnest_tokens(word, text)
+sas_most_common_words <- sas_df %>%
+  count(word, sort = TRUE) 
+
+#full join pap & sas dataframes to retain all words and counts.
+pap_and_sas_common_words <- 
+  full_join(pap_most_common_words, sas_most_common_words, 
+            #count words from each book in separate columns
+            by = c("word"), suffix = c(".pap", ".sas")) %>%
+  clean_names() %>%
+  #count words that are common in both books and add counts together
+  mutate(most_pop_words = n_pap + n_sas) %>%
+  arrange(desc(most_pop_words)) #arrange in descending order by words that are used most commonly in both books
+
+pap_and_sas_common_words %>%
+  slice(1:10) %>%
+  select(word)
+```
+Including stop_words, the most popular words across Pride & Prejudice and Sense & Sensibility are: 
+
+"the, to, of, and, her, i, a, in, was, she"
+
+# 2. Find the most common words in both Pride & Prejudice and Sense & Sensibility, not including stop words.
+
+```{r}
+pap_df_no_stop <- tibble(text = prideprejudice) %>%
+  unnest_tokens(word, text) 
+#find most common words in prideandprejudice (pap)
+
+pap_most_common_words_no_stop <- pap_df_no_stop %>%
+  count(word, sort = TRUE) %>%
+  anti_join(stop_words) #removing stop_words
+#find most common words in sensandsensibility (sas)
+
+sas_df_no_stop <- tibble(text = sensesensibility) %>%
+  unnest_tokens(word, text)
+
+sas_most_common_words_no_stop <- sas_df_no_stop %>%
+  count(word, sort = TRUE) %>%
+  anti_join(stop_words) #removing stop words
+
+#full join pap & sas dataframes to retain all words and counts.
+pap_and_sas_common_words_no_stop <- 
+  full_join(pap_most_common_words_no_stop, sas_most_common_words_no_stop, 
+            #count words from each book in separate columns
+            by = c("word"), suffix = c(".pap", ".sas")) %>%
+  clean_names() %>%
+  #count words that are common in both books and add counts together
+  mutate(most_pop_words = n_pap + n_sas) %>%
+  arrange(desc(most_pop_words)) #arrange in descending order by words that are used most commonly in both books
+
+pap_and_sas_common_words_no_stop %>%
+  slice(1:10) %>%
+  select(word)
+```
+
+Not including stop words, the most common words in both books are as follows: 
+
+"miss, time, sister, mother, lady, day, dear, house, jane, family"
 
 
+# 3. Find the most common sentiment words in both Pride & Prejudice and Sense & Sensibility.
+
+```{r}
+#create pap df for durther wrangling
+pap_sentiment <- tibble(text = prideprejudice) %>%
+  unnest_tokens(word, text) %>%
+  count(word, sort = TRUE)
+
+#create sas df for further wrangling
+sas_sentiment <- tibble(text = sensesensibility) %>%
+  unnest_tokens(word, text) %>%
+  count(word, sort = TRUE)
+
+books_sentiment <- full_join(pap_sentiment, sas_sentiment,
+                             by = c("word"), suffix = c(".pap", ".sas")) %>%
+  anti_join(stop_words) %>%
+  clean_names() %>%
+  mutate(most_pop_words = n_pap + n_sas) %>%
+  inner_join(get_sentiments("bing")) %>%
+  arrange(desc(most_pop_words))
+
+books_sentiment_top_10 <- books_sentiment %>%
+  slice(1:10)
+books_sentiment_top_10
+
+```
+
+10 most polular sentiment words across both books are as follows: 
+
+"miss, happy, love, pleasure, happiness, affection, poor, regard, comfort, perfectly".
+
+# Extension
+Taking your results above. Can you create a plot which visualises the differences between the books?
+
+```{r}
+books_sentiment %>%
+  group_by(word) %>%
+  summarise(pap_avg_sentiment = mean(n_pap)) %>%
+  ggplot(aes(x = word, y = pap_avg_sentiment)) +
+  geom_smooth(se = FALSE)
+```
 

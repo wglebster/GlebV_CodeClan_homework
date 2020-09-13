@@ -165,6 +165,21 @@ auto_all_feature_model_w_int <- glmulti(purchase_mm ~ . , #testing effects of al
                                   fitfunction = "glm",
                                   family = binomial(link = "logit")
                                   )
+#tried exhaustive search of all features with interactions, but it was taking too long. 
+
+#Trying genetic search with interactions
+auto_all_feature_model_w_int_gen <- glmulti(
+  purchase_mm ~ .,
+  data = train_juice,
+  level = 2,               # Interactions considered
+  method = "g",            # Genetic algorithm approach
+  crit = "aic",            # AIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  marginality = TRUE,      # consider pairs only if both main effects in model
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # binomial family for logistic regression
 
 summary(auto_all_feature_model_w_int)
 ```
